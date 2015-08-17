@@ -1,6 +1,7 @@
 > module GCD -- following an idea from Tim Richter
 
 > import NatProperties
+> import Control.WellFounded
 
 > %default total
 > %hide gcd
@@ -168,6 +169,57 @@ Euclid's greatest common divisor algorithm
 >     gcd  = getWitness gcdP
 >     P    : GCD gcd (S m - S n) (S n)
 >     P    = getProof gcdP
+
+variant using wellfounded induction thus avoiding assert_total:
+
+> data euclR : (Nat, Nat) -> (Nat, Nat) -> Type where
+>   euclR_mLTEn : {m, n: Nat} -> 
+>                 (m `LTE` n) -> ( 0 `LT` m ) -> euclR (m, n - m) (m,n)
+>   euclR_mGTn  : {m, n: Nat} -> 
+>                 Not (m `LTE` n) -> (0 `LT` n) -> euclR (m - n, n) (m,n)
+
+> instance WellFounded euclR where
+> 
+
+> euclidGCDWF : (p : (Nat, Nat)) -> (d : Nat ** GCD d (fst p) (snd p))
+> euclidGCDWF = wfInd euclidStep where
+>   euclidStep : (p : (Nat, Nat)) -> 
+>                ((p' : (Nat, Nat)) -> euclR p' p -> 
+>                   (d : Nat ** GCD d (fst p') (snd p'))) ->
+>                (d : Nat ** GCD d (fst p) (snd p))
+>   euclidStep (m, Z) _ = euclidGCD1
+>   euclidStep (Z, n) _ = euclidGCD2
+>   euclidStep (S m, S n) s with (decLTE (S m) (S n))
+>     | (Yes p) = (gcd ** euclidGCD3 p P where
+>       gcdP : (d : Nat ** GCD d (S m) (S n - S m))
+>       gcdP = s (S m, (S n) - (S m)) (euclR_mLTEn p LTEZero)
+>       gcd  : Nat
+>       gcd  = getWitness gcdP
+>       P    : GCD gcd (S m) (S n - S m)
+>       P    = getProof gcdP
+>     | (No p) = (gcd ** euclidGCD4 p P) where
+>     gcdP : (d : Nat ** GCD d (S m - S n) (S n))
+>     gcdP = s ((S m) - (S n), S n) (euclR_mGTn p LTEZero)
+>     gcd  : Nat
+>     gcd  = getWitness gcdP
+>     P    : GCD gcd (S m - S n) (S n)
+>     P    = getProof gcdP
+
+
+
+need "dependent currying"
+
+> curryD : {A, B : Type} -> {C : (A, B) -> Type} ->
+>          ((p : (A, B)) -> C p) -> 
+>          (a : A) -> (b : B) -> (curry C) a b
+> curryD u a b = u (a, b)
+
+> euclidGCD' : (m : Nat) -> (n : Nat) -> (d : Nat ** GCD d m n)
+> euclidGCD' = curryD {C = \ p => (d : Nat ** GCD d (fst p) (snd p))} 
+>                     euclidGCDWF
+
+
+
 
 > {-
 
