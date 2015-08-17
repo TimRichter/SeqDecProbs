@@ -187,23 +187,23 @@ variant using wellfounded induction thus avoiding assert_total:
 >                ((p' : (Nat, Nat)) -> euclR p' p -> 
 >                   (d : Nat ** GCD d (fst p') (snd p'))) ->
 >                (d : Nat ** GCD d (fst p) (snd p))
->   euclidStep (m, Z) _ = euclidGCD1
->   euclidStep (Z, n) _ = euclidGCD2
+>   euclidStep (m, Z) _ = (m ** euclidGCD1)
+>   euclidStep (Z, n) _ = (n ** euclidGCD2)
 >   euclidStep (S m, S n) s with (decLTE (S m) (S n))
->     | (Yes p) = (gcd ** euclidGCD3 p P where
+>     | (Yes p) = (gcd ** euclidGCD3 p P) where
 >       gcdP : (d : Nat ** GCD d (S m) (S n - S m))
->       gcdP = s (S m, (S n) - (S m)) (euclR_mLTEn p LTEZero)
+>       gcdP = s (S m, (S n) - (S m)) (euclR_mLTEn p (LTESucc LTEZero))
 >       gcd  : Nat
 >       gcd  = getWitness gcdP
 >       P    : GCD gcd (S m) (S n - S m)
 >       P    = getProof gcdP
 >     | (No p) = (gcd ** euclidGCD4 p P) where
->     gcdP : (d : Nat ** GCD d (S m - S n) (S n))
->     gcdP = s ((S m) - (S n), S n) (euclR_mGTn p LTEZero)
->     gcd  : Nat
->     gcd  = getWitness gcdP
->     P    : GCD gcd (S m - S n) (S n)
->     P    = getProof gcdP
+>       gcdP : (d : Nat ** GCD d (S m - S n) (S n))
+>       gcdP = s ((S m) - (S n), S n) (euclR_mGTn p (LTESucc LTEZero))
+>       gcd  : Nat
+>       gcd  = getWitness gcdP
+>       P    : GCD gcd (S m - S n) (S n)
+>       P    = getProof gcdP
 
 
 
