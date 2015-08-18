@@ -178,8 +178,11 @@ variant using wellfounded induction thus avoiding assert_total:
 >   euclR_mGTn  : {m, n: Nat} -> 
 >                 Not (m `LTE` n) -> (0 `LT` n) -> euclR (m - n, n) (m,n)
 
-> instance WellFounded euclR where
-> 
+ instance WellFounded euclR where
+   wellFounded : (p: (Nat, Nat)) -> Accessible euclR p
+   wellFounded (Z, n) = Access fromEmpty1 where
+     fromEmpty1 : (p':(Nat,Nat)) -> euclR p' (Z, n) -> Accessible euclR p'
+     fromEmpty1 (m', n') ...
 
 > euclidGCDWF : (p : (Nat, Nat)) -> (d : Nat ** GCD d (fst p) (snd p))
 > euclidGCDWF = wfInd euclidStep where
