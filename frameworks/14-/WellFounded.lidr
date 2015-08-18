@@ -98,3 +98,7 @@ class WellFounded (rel : a -> a -> Type) where
 > wfInd {rel} (mkWF wf) step x = accInd step x (wf x)
 > 
 
+
+
+
+
