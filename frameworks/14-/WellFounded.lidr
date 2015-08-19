@@ -114,7 +114,7 @@ wf relation under some map, I'll start from the beginning without type classes.
 >   wf (S n) = Access (stepS n)
 
 > ||| LT on Nat is wellfounded
-> ||| lemmata (should go somewhere else)
+> ||| lemmata (should go to NatProperties?)
 
 > lteAntisym : {m, n: Nat} -> ( m `LTE` n) -> (n `LTE` m) -> m = n
 > lteAntisym LTEZero LTEZero = Refl
