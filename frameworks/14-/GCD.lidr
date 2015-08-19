@@ -1,7 +1,7 @@
 > module GCD -- following an idea from Tim Richter
 
 > import NatProperties
-> import Control.WellFounded
+> import WellFounded
 
 > %default total
 > %hide gcd
@@ -178,14 +178,29 @@ variant using wellfounded induction thus avoiding assert_total:
 >   euclR_mGTn  : {m, n: Nat} -> 
 >                 Not (m `LTE` n) -> (0 `LT` n) -> euclR (m - n, n) (m,n)
 
- instance WellFounded euclR where
-   wellFounded : (p: (Nat, Nat)) -> Accessible euclR p
-   wellFounded (Z, n) = Access fromEmpty1 where
-     fromEmpty1 : (p':(Nat,Nat)) -> euclR p' (Z, n) -> Accessible euclR p'
-     fromEmpty1 (m', n') ...
+> ||| We want to prove euclR is wellfounded. 
+> ||| Plan:
+> ||| 1. euclR is a subRelation of sumLT : { ((m,n),(k,l)) | m + n < k + l }
+> ||| 2. sumLT is the Inverse image of LT under `+`
+> ||| 3. LT is wellfounded
+
+> sumLT : (Nat, Nat) -> (Nat, Nat) -> Type
+> sumLT = relInvIm (\ (m,n) => m + n) LT
+
+> sumLTWF : WF sumLT
+> sumLTWF = relInvImWF ltWF
+
+> injEuclRsumLT : {p1 , p2 : (Nat,Nat)} -> euclR p1 p2 -> sumLT p1 p2
+> injEuclRsumLT (euclR_mLTEn mLTEn zLTm) = pf where
+>   pf : (S (m + (n - m))) `LTE` (m + n)  -- ...
+> injEuclRsumLT (euclR_mGTn  notmLTEn zLTn) = pf where
+>   pf : (S ((m - n) + n)) `LTE` (m + n)  -- ...
+
+> euclRWF : WF euclR
+> euclRWF = relSubWF injEuclRsumLT sumLTWF
 
 > euclidGCDWF : (p : (Nat, Nat)) -> (d : Nat ** GCD d (fst p) (snd p))
-> euclidGCDWF = wfInd euclidStep where
+> euclidGCDWF = wfInd euclRWF euclidStep where
 >   euclidStep : (p : (Nat, Nat)) -> 
 >                ((p' : (Nat, Nat)) -> euclR p' p -> 
 >                   (d : Nat ** GCD d (fst p') (snd p'))) ->
