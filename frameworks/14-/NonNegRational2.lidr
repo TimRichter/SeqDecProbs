@@ -5,28 +5,28 @@
 > import Syntax.PreorderReasoning
 
 
-> NonNegNat : Type
+> PosNat : Type
 
 Cannot use this, since it involves the function type
 |Not (n = Z)| and (without function extensionality) it 
 usually will be impossible to prove equalities:
 
-< NonNegNat = (n : Nat ** Not (n = Z)) 
+< PosNat = (n : Nat ** Not (n = Z)) 
 
 this should work (a lot?) easier than what follows below:
 
-< NonNegNat2 : Type
-< NonNegNat2 = (n : Nat ** (p : Nat ** n = S p))
+< PosNat2 : Type
+< PosNat2 = (n : Nat ** (p : Nat ** n = S p))
 
 But for now
 
-> NonNegNat = Nat
+> PosNat = Nat
 
 we represent the nonnegative fraction (n,S d) by
 the pair (n,d)
 
 > Fraction : Type
-> Fraction = (Nat,NonNegNat)
+> Fraction = (Nat,PosNat)
 
 Helper operation for the denominators
 
