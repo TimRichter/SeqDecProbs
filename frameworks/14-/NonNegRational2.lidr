@@ -387,7 +387,7 @@ a divisor of (S n) is an S _
 
 > divPosPos : (n, m : Nat) -> n `Divisor` (S m) -> 
 >                 ( p : Nat ** n = S p )
-> divPosPos Z m (mkDivisor Z (S m) nDivSm) = 
+> divPosPos Z m nDivSm = 
 >   absurd (ZnotS zIsS) where
 >   zIsS : 0 = S m
 >   zIsS = getProof nDivSm
@@ -395,8 +395,8 @@ a divisor of (S n) is an S _
 
 > divByPosPos : (n, m : Nat) -> (nDivSm : n `Divisor` (S m)) ->
 >               (p : Nat ** (divBy n (S m) nDivSm) = S p)
-> divByPosPos n m (mkDivisor n (S m) (Evidence q nqIsSm)) =
->   divPosPos q m (mkDivisor q (S m) (Evidence n qnIsSm)) where
+> divByPosPos n m (Evidence q nqIsSm) =
+>   divPosPos q m (Evidence n qnIsSm) where
 >     qnIsSm : q * n = S m
 >     qnIsSm = trans (multCommutative q n) nqIsSm
 
