@@ -1,8 +1,10 @@
 > module NonNegRational2
 
 > import NatPredicates
+> import NatOperations
 > import NatProperties
 > import Syntax.PreorderReasoning
+> import GCD
 
 
 > PosNat : Type
@@ -369,6 +371,58 @@ something like that
 >     (x * z + y * z)
 >     QED
 >   
+
+------------------------------------------------------
+
+and now for the quotient
+
+lemmata 
+
+> notZIsS : (n : Nat) -> Not (n = 0) -> (p : Nat ** n = S p)
+> notZIsS Z     pf = absurd (pf Refl)
+> notZIsS (S p) _  = ( p ** Refl)
+
+
+a divisor of (S n) is an S _ 
+
+> divPosPos : (n, m : Nat) -> n `Divisor` (S m) -> 
+>                 ( p : Nat ** n = S p )
+> divPosPos Z m (mkDivisor Z (S m) nDivSm) = 
+>   absurd (ZnotS zIsS) where
+>   zIsS : 0 = S m
+>   zIsS = getProof nDivSm
+> divPosPos (S p) _ _ = (p ** Refl)
+
+> divByPosPos : (n, m : Nat) -> (nDivSm : n `Divisor` (S m)) ->
+>               (p : Nat ** (divBy n (S m) nDivSm) = S p)
+> divByPosPos n m (mkDivisor n (S m) (Evidence q nqIsSm)) =
+>   divPosPos q m (mkDivisor q (S m) (Evidence n qnIsSm)) where
+>     qnIsSm : q * n = S m
+>     qnIsSm = trans (multCommutative q n) nqIsSm
+
+> gcdPosPos : (g, m, n : Nat) -> GCD g m (S n) -> (p : Nat ** g = S p)
+> gcdPosPos g m n (mkGCD _ gDivSn _) = divPosPos g n gDivSn
+
+
+> toLowest : Fraction -> Fraction
+> toLowest (n,d) = (n',d') where
+>   gcd : (g : Nat ** GCD g n (S d))
+>   gcd = euclidGCD n (S d)
+>   g   : Nat
+>   g   = getWitness gcd
+>   gIsGCD : GCD g n (S d)
+>   gIsGCD = getProof gcd
+>   n'  : Nat
+>   n'  = divBy g n (gcdDivisorFst gIsGCD)
+>   d'  : Nat
+>   d'  = getWitness (divByPosPos g d (gcdDivisorSnd gIsGCD))
+>   
+
+
+and we need
+
+> tLowestIdem : (x : Fraction) -> toLowest (toLowest x) = toLowest x
+
 
 
 
