@@ -7,6 +7,21 @@
 
 > %default total
 
+An idempotent endomap c of a type A can be thought of as 
+a choice function for representatives of the kernel of c :
+
+  ker c : A -> A -> Type
+  ker c x y = c x = c y
+
+which is an (in Idris even propositional a.k.a. unique)
+equivalence relation on A.
+
+The subset of elements in A fixed by c can then be 
+identified with the quotient of A by the kernel of c.
+
+So to construct the quotient by any given equivalence ~ on
+A, it suffices to find an idempotent endomap c such that
+the relations  ~ and (ker c) are isomorphic.
 
 > FixpointFam : {A : Type} -> (A -> A) -> A -> Type
 > FixpointFam {A} c x = (c x = x)
@@ -20,13 +35,13 @@
 > IdempotentEndo : (A : Type) -> Type
 > IdempotentEndo A = Sigma (A -> A) IsIdempotent
 
-> Quot : {A : Type} -> IdempotentEndo A -> Type
-> Quot c = Fixpoints (getWitness c)
+> SQuot : {A : Type} -> IdempotentEndo A -> Type
+> SQuot c = Fixpoints (getWitness c)
 
 
 > ||| there is a canonical map into the quotient
 >
-> can : {A : Type} -> (c : (IdempotentEndo A)) -> A -> Quot c
+> can : {A : Type} -> (c : (IdempotentEndo A)) -> A -> SQuot c
 > can (c ** cIdem ) y = ((c y) ** (cIdem y) )
 
 
@@ -39,7 +54,7 @@
 > ||| it suffices to prove c x = c y
 >
 > quotEqLemma : {A : Type} -> {c : IdempotentEndo A} ->
->               (x, y : Quot c) -> 
+>               (x, y : SQuot c) -> 
 >               (getWitness c) (getWitness x) = 
 >                   (getWitness c) (getWitness y) ->
 >               x = y
@@ -58,7 +73,7 @@
 > ||| we can use this to prove surjectivity of can
 >
 > canSurj : {A : Type} -> {c : IdempotentEndo A} -> 
->           (x : Quot c) ->
+>           (x : SQuot c) ->
 >           Sigma A (\y => can c y = x)
 > canSurj {c} (x ** cxIsx) = ( x  **  canCxIsx  ) where
 >   cxIsx' : getWitness (can c x) = x
@@ -68,10 +83,11 @@
 >              (cong {f = getWitness c} cxIsx')
 
 
-> ||| we can use this to prove surjectivity of can
+> ||| or, in other words, getWitness is a section
+> ||| of (can c)
 >
 > canSurj' :  {A : Type} -> {c : IdempotentEndo A} -> 
->             (x : Quot c) ->
+>             (x : SQuot c) ->
 >             ((can c) . getWitness) x = x
 > canSurj' {c} (x ** cxIsx) = canCxIsx where
 >   cxIsx' : getWitness (can c x) = x
@@ -80,18 +96,18 @@
 >   canCxIsx = quotEqLemma (can c x) (x ** cxIsx) 
 >              (cong {f = getWitness c} cxIsx')
 
-> ||| lift functions A -> B to Quot c -> B by precomposing 
+> ||| lift functions A -> B to SQuot c -> B by precomposing 
 > ||| with getWitness, i.e. restrict them to the Fixpoints of c
 >
 > liftQ : {A, B : Type} -> (c : IdempotentEndo A) -> (f : A -> B) ->
->         Quot c -> B
+>         SQuot c -> B
 > liftQ c f ( x ** _ ) = f x
 
 > ||| same for curried functions of two arguments
 >
 > liftQ2 : {A, B : Type} -> (c : IdempotentEndo A) -> 
 >         (f : A -> A -> B) ->
->         Quot c -> Quot c -> B
+>         SQuot c -> SQuot c -> B
 > liftQ2 c f ( x ** _ ) ( y ** _ ) = f x y
 
 > ||| for c-invariant functions f : A -> B 
@@ -116,18 +132,62 @@
 >                   (x, y : A) -> (liftQ2 c f) (can c x) (can c y) = f x y
 > liftQcanLemma2 (c ** cIdem) f fIsInv x y = fIsInv (c x) (c y) x y (cIdem x) (cIdem y)
 
-> ||| important special case: binary operations on A define
-> ||| binary operations on Quot c
+
+> ||| helper for liftQBinop
 >
-> liftBinQuot : {A : Type} -> (c : IdempotentEndo A) ->
+> postcan : {A : Type} -> (c : IdempotentEndo A) ->
+>           (op : A -> A -> A) ->
+>           (A -> A -> SQuot c)
+> postcan c op x y = can c (x `op` y)
+
+> ||| important special case: binary operations on A define
+> ||| binary operations on SQuot c
+>
+> liftQBinop : {A : Type} -> (c : IdempotentEndo A) ->
 >               (op : A -> A -> A) ->
->               (Quot c -> Quot c -> Quot c)
-> liftBinQuot {A} c op x y = liftQ2 c cqop x y where
->   cqop : A -> A -> Quot c
->   cqop x y = can c ( x `op` y)
+>               (SQuot c -> SQuot c -> SQuot c)
+> liftQBinop {A} c op x y = liftQ2 c (postcan c op) x y
 
+> ||| 
+>
+> liftQBinopLemma :  {A : Type} -> (c : IdempotentEndo A) -> 
+>                   (op : A -> A -> A) ->
+>                   ( (x, x', y, y' : A) -> 
+>                     ((getWitness c) x = (getWitness c) y) -> 
+>                     ((getWitness c) x' = (getWitness c) y') -> 
+>                     can c (x `op` x') = can c (y `op` y')  
+>                   ) ->
+>                   (x, y : A) -> 
+>                   (liftQBinop c op) (can c x) (can c y) = can c (x `op` y)
+> liftQBinopLemma {A} c op opIsInv x y = liftQcanLemma2 {A} {B=SQuot c} c (postcan c op) opIsInv x y
 
-
-
+> ||| combined with canSurj', we obtain a
+> ||| "computation rule" for the lifted operation.
+> ||| 
+> ||| If we could write [x] for (can c x) and 
+> ||| [op] for (liftQBinop c op) that would read:
+> |||
+> ||| [x] [op] [y] = [ x op y ]
+>
+> compLiftQBinop :  {A : Type} -> {c : IdempotentEndo A} ->
+>                   (op : A -> A -> A) ->
+>                   ( (x, x', y, y' : A) -> 
+>                     ((getWitness c) x = (getWitness c) y) -> 
+>                     ((getWitness c) x' = (getWitness c) y') -> 
+>                     can c (x `op` x') = can c (y `op` y')  
+>                   ) ->
+>                   (x : SQuot c) -> (y : SQuot c) ->
+>                   (liftQBinop c op) x y = can c ((getWitness x) `op` (getWitness y))
+> compLiftQBinop {A} {c} op opInv (x ** cxIsx) (y ** cyIsy) =
+>     ((liftQBinop c op) (x ** cxIsx) (y ** cyIsy))
+>     ={ cong {f = \k => (liftQBinop c op) k (y ** cyIsy)}
+>             (sym (canSurj' (x ** cxIsx))) }=
+>     ((liftQBinop c op) (can c x) (y ** cyIsy))
+>     ={ cong {f = \k => (liftQBinop c op) (can c x) k }
+>             (sym (canSurj' (y ** cyIsy))) }=
+>     ((liftQBinop c op) (can c x) (can c y))
+>     ={ liftQBinopLemma c op opInv x y }=
+>     (can c (x `op` y))
+>     QED
 
 
