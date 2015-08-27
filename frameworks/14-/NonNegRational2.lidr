@@ -5,6 +5,7 @@
 > import NatProperties
 > import Syntax.PreorderReasoning
 > import GCD
+> import SplitQuotient
 
 > %default total
 
@@ -419,12 +420,87 @@ a divisor of (S n) is an S _
 >   d'  = getWitness (divByPosPos g d (gcdDivisorSnd gIsGCD))
 >   
 
-
 we need
 
-> tLowestIdem : (x : Fraction) -> toLowest (toLowest x) = toLowest x
+> toLowestIdem : (x : Fraction) -> toLowest (toLowest x) = toLowest x
 
-and an Iso...
+> tlEndo : IdempotentEndo Fraction
+> tlEndo = ( toLowest ** toLowestIdem )
+
+> data NonNegQ2 : Type where
+>   MkNonNegQ2 : SQuot tlEndo -> NonNegQ2
+
+> unwrap : NonNegQ2 -> SQuot tlEndo
+> unwrap (MkNonNegQ2 x) = x
+
+
+and an Iso:
+
+> fRToKerTL : {x, y : Fraction} -> FR x y -> toLowest x = toLowest y
+
+> fRFromKerTL : {x, y : Fraction} -> toLowest x = toLowest y -> FR x y 
+
+
+> plus : NonNegQ2 -> NonNegQ2 -> NonNegQ2
+> plus x y = 
+>   MkNonNegQ2 ((liftQBinop tlEndo plusFraction) (unwrap x) (unwrap y))
+
+
+> mult : NonNegQ2 -> NonNegQ2 -> NonNegQ2
+> mult x y = 
+>   MkNonNegQ2 ((liftQBinop tlEndo multFraction) (unwrap x) (unwrap y))
+
+
+> minus : NonNegQ2 -> NonNegQ2 -> NonNegQ2
+> minus x y = 
+>   MkNonNegQ2 ((liftQBinop tlEndo minusFraction) (unwrap x) (unwrap y))
+
+
+> fromIntegerQ : Integer -> NonNegQ2
+> fromIntegerQ = MkNonNegQ2 . (can tlEndo) . fromIntegerFraction
+
+
+> instance Num NonNegQ2 where
+>   (+) = plus
+>   (-) = minus
+>   (*) = mult
+>   fromInteger = fromIntegerQ
+>   abs = id
+
+
+
+> plusInvariant : (left1, left2, right1, right2 : Fraction) -> 
+>                 (left1  =/= left2 ) -> 
+>                 (right1 =/= right2) -> 
+>                 left1 + right1 =/= left2 + right2
+
+ plusInvariant (n,d) (m,e) (l,f) (k,g) nSfIslSd mSgIskSe = 
+   ((n * S f + l * S d) * (S e * S g))
+   ={ multDistributesOverPlusLeft }=
+
+
+ gugu : (x : NonNegQ2) -> x + 0 = x
+ gugu x =
+  (x + 0) 
+   ={ Refl }=
+  (MkNonNegQ2 ((liftQBinop tlEndo plusFraction) (unwrap x) (unwrap 0)))
+   ={ 
+
+
+
+ gugu (MkNonNegQ2 x) = cong {f = MkNonNegQ2} pf where
+   pf : x  0
+
+
+
+
+
+
+
+
+
+
+
 
 -------- more lemmata 
 
