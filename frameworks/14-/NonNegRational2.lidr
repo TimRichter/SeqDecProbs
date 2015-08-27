@@ -6,6 +6,7 @@
 > import Syntax.PreorderReasoning
 > import GCD
 
+> %default total
 
 > PosNat : Type
 
@@ -419,9 +420,68 @@ a divisor of (S n) is an S _
 >   
 
 
-and we need
+we need
 
 > tLowestIdem : (x : Fraction) -> toLowest (toLowest x) = toLowest x
+
+and an Iso...
+
+-------- more lemmata 
+
+
+> multCancelLeft : (d, m, n : Nat) ->
+>                  (S d) * m = (S d) * n ->
+>                   m = n
+
+> divByDivisorLemma : (d, m, n : Nat) -> 
+>                     (mDn : m     `Divisor` n) -> 
+>                     (dDm : (S d) `Divisor` m) -> 
+>                     (dDn : (S d) `Divisor` n) ->
+>                     (divBy (S d) m dDm) `Divisor` 
+>                       (divBy (S d) n dDn)
+> divByDivisorLemma d m n (Evidence k mkIsn) 
+>                         (Evidence r sdrIsm) 
+>                         (Evidence t sdtIsn) =
+>       Evidence k rkIst where
+>   sdrkIsSdk : S d * (r * k) = S d * t
+>   sdrkIsSdk =
+>     (S d * (r * k)) ={ multAssociative (S d) r k }=
+>     (S d * r * k)   ={ cong {f = \x => x * k} sdrIsm }=
+>     (m * k)         ={ mkIsn }=
+>     n               ={ sym sdtIsn }=
+>     (S d * t)       QED
+>                    
+>   rkIst : r * k = t
+>   rkIst = multCancelLeft d (r * k) t sdrkIsSdk
+>   
+
+> gcdProdLemma :  (alg : (a : Nat) -> (b : Nat) -> (d : Nat ** GCD d a b)) ->
+>                 (m, n, l : Nat) ->
+>                 gcd (alg (m * n) (m * l)) = m * gcd (alg n l)
+> gcdProdLemma alg Z n l = gcdUnique (gcd (alg Z Z)) 0 (getProof (alg Z Z)) gcdZZZ where
+>   gcdZZZ : GCD 0 0 0
+>   gcdZZZ = mkGCD (anyDivisorZ 0) (anyDivisorZ 0) (\d => \x => \y => anyDivisorZ d) 
+> gcdProdLemma alg (S m) n l = pf where
+>   mDmn : m `Divisor` (m * n)
+>   mDmn = Evidence n Refl
+>   mDml : m `Divisor` (m * l)
+>   mDml = Evidence l Refl
+>   pf = ?lilo
+
+Informal:
+   - Seien gmnml = gcd m*n m*l und gnl = gcd n l
+   - m | m*n und m | m*l => m | gmnml
+   - Sei  g = (gcd m*n m*l) / m, z.z. ist g = gnl
+   - gmnml | m*n, m | gmnml und m | m*n
+      =>  (gmnml / m) | ((m * n) / m)  (divByDivisorLemma)
+      i.e. g | n
+   - analog g | l
+   - Sei d gemeinsamer Teiler von n und l
+     d | n , d | l =>
+     m*d | m*n, m*d | m * l =>
+     m*d | gmnml  => (m | m*d und m | gmnml, Lemma nochmal)
+     d | g
+
 
 
 
