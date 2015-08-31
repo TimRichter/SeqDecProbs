@@ -17,12 +17,15 @@ usually will be impossible to prove equalities:
 
 < PosNat = (n : Nat ** Not (n = Z)) 
 
-this should work (a lot?) easier than what follows below:
+an alternative would be
 
 < PosNat2 : Type
-< PosNat2 = (n : Nat ** (p : Nat ** n = S p))
+< PosNat2 = (n : Nat ** (S (pred n) = n))
 
-But for now
+We'd get rid of the S's, but had to deal with
+the positivity proofs.
+
+So for now
 
 > PosNat = Nat
 
@@ -63,75 +66,38 @@ Operations and Num instance
 
 Properties of *^
 
-> multUpLemma : (d, e : Nat) -> S (d *^ e) = (S d) * (S e)
-> multUpLemma d e = Refl
-
 > multUpCommutative: (d, e : Nat) -> d *^ e = e *^ d
 > multUpCommutative d e = succInjective _ _ pf where
 >   pf : S (d *^ e) = S (e *^ d)
->   pf =
->     (S (d *^ e))
->     ={ multUpLemma d e }=
->     ((S d) * (S e))
->     ={ multCommutative (S d) (S e) }=
->     ((S e) * (S d))
->     ={ sym (multUpLemma e d) }=
->     (S (e *^ d))
->     QED
+>   pf = multCommutative (S d) (S e)
 
 > multUpAssoc : (d, e, f : Nat) -> d *^ (e *^ f) = (d *^ e) *^ f
 > multUpAssoc d e f = succInjective _ _ pf where
 >   pf : S (d *^ (e *^ f)) = S ((d *^ e) *^ f)
->   pf =
->     (S (d *^ (e *^ f)))
->     ={ multUpLemma d (e *^ f) }=
->     ((S d) * (S (e *^ f)))
->     ={ cong {f = \k => (S d) * k} (multUpLemma e f) }=
->     ((S d) * ((S e) * (S f)))
->     ={ multAssociative (S d) (S e) (S f) }=
->     (((S d) * (S e)) * (S f))
->     ={ cong {f = \k => k * (S f)} (sym (multUpLemma d e)) }=
->     ((S (d *^ e)) * (S f))
->     ={ sym (multUpLemma (d *^ e) f) }=
->     (S ((d *^ e) *^ f))
->     QED
+>   pf = multAssociative (S d) (S e) (S f)
 
 > multUpZeroRightNeutral : (d : Nat) -> d *^ Z = d
 > multUpZeroRightNeutral d = succInjective _ _ pf where
 >   pf : S (d *^ Z) = (S d)
->   pf = 
->     (S (d *^ Z))
->     ={ multUpLemma d Z }=
->     ((S d) * (S Z))
->     ={ multOneRightNeutral (S d) }=
->     (S d)
->     QED
+>   pf = multOneRightNeutral (S d)
 
 Properties of Fraction operations
 
 > plusFCommutative : (x : Fraction) -> (y : Fraction) -> (x + y) = (y + x)
 > plusFCommutative (n,d) (m,e) = 
 >     ((n, d) + (m, e))
->     ={ Refl }=
->     (n * (S e) + m * (S d), d *^ e)
 >     ={ cong {f = \k => (k, d *^ e) } (plusCommutative (n * (S e)) (m * (S d))) }=
 >     (m * (S d) + n * (S e), d *^ e)
 >     ={ cong {f = \k => (m * (S d) + n * (S e), k)} (multUpCommutative d e)}=
->     (m * (S d) + n * (S e), e *^ d)
->     ={ Refl }=
 >     ((m, e) + (n, d))
 >     QED
 
 > multFCommutative : (x : Fraction) -> (y : Fraction) -> (x * y) = (y * x)
 > multFCommutative (n,d) (m,e) =
 >     ((n,d) * (m,e))
->     ={ Refl }=
->     (n * m, d *^ e)
 >     ={ cong {f = \k => (k, d *^ e)} (multCommutative n m) }=
 >     (m * n, d *^ e)
 >     ={ cong {f = \k => (m * n, k)} (multUpCommutative d e) }=
->     (m * n, e *^ d)
->     ={ Refl }=
 >     ((m, e) * (n, d))
 >     QED
 
@@ -149,8 +115,6 @@ Properties of Fraction operations
 >
 >   pf =
 >     ((n, d) + (Z, Z))               
->     ={ Refl }=
->     (n * (S Z) + Z * (S d), d *^ Z) 
 >     ={ cong {f = \m => (m, d *^ Z)} numEq }=
 >     (n, d *^ Z)                     
 >     ={ cong {f = \m => (n, m)} (multUpZeroRightNeutral d) }=
@@ -173,9 +137,6 @@ Properties of Fraction operations
 >           (n * S e + m * S d) * S f + l * S (d *^ e)
 >   numEq =
 >     (n * S (e *^ f) + (m * S f + l * S e) * S d)
->     ={ cong {f = \k => n * k + (m * S f + l * S e) * S d } 
->       (multUpLemma e f)}=
->     (n * (S e * S f) + (m * S f + l * S e) * S d)
 >     ={ cong {f = \k => k + (m * S f + l * S e) * S d}
 >       (multAssociative n (S e) (S f)) }=
 >     (n * S e * S f + (m * S f + l * S e) * S d)
@@ -192,32 +153,21 @@ Properties of Fraction operations
 >     ((n * S e + m * S d) * S f + l * S e * S d)
 >     ={ cong {f = \k => (n * S e + m * S d) * S f + k} 
 >       (multComm' l (S e) (S d)) }=
->     ((n * S e + m * S d) * S f + l * (S d * S e))
->     ={ cong {f = \k => (n * S e + m * S d) * S f + l * k}
->       (sym (multUpLemma d e)) }=
 >     ((n * S e + m * S d) * S f + l * S (d *^ e))
 >     QED
 >
 >   pf =          
 >     ((n,d) + ((m,e) + (l,f)))
->     ={ Refl }=
->     ((n,d) + (m * S f + l * S e, e *^ f))
->     ={ Refl }=
->     (n * S (e *^ f) + (m * S f + l * S e) * S d, d *^ (e *^ f))
 >     ={ cong {f = \k => (k, d *^ (e *^ f))} numEq }= 
 >     ((n * S e + m * S d) * S f + l * S (d *^ e), d *^ (e *^ f))
 >     ={ cong {f = \k => ((n * S e + m * S d) * S f + l * S (d *^ e), k)}
 >         (multUpAssoc d e f) }=
->     ((n * S e + m * S d) * S f + l * S (d *^ e), (d *^ e) *^ f)
->     ={ Refl }=
 >     (((n,d) + (m,e)) + (l,f))
 >     QED
 
 > multFOneRightNeutral : (x : Fraction) -> x * 1 = x
 > multFOneRightNeutral (n,d) =
 >   ((n,d) * (1,0))
->   ={ Refl }=
->   (n * (S Z), d *^ 0)
 >   ={ cong {f = \k => (n * (S 0), k)} (multUpZeroRightNeutral d) }= 
 >   (n * (S Z), d)
 >   ={ cong {f = \k => (k, d)} (multOneRightNeutral n) }=
@@ -236,15 +186,17 @@ Rational numbers will be a quotient of Fractions by the equivalence relation
 to append to properties, we call this Relation FR
 
 > FR : Fraction -> Fraction -> Type
-> FR x y = x =/= y
+> FR (n,d) (m,e) = n * (S e) = m * (S d)
 
-> reflexiveFR : (x : Fraction) -> x =/= x
+> syntax  [x] "~" [y] = FR x y
+
+> reflexiveFR : (x : Fraction) -> x ~ x
 > reflexiveFR (n,d) = Refl
 
-> reflexiveFR' : (x, y : Fraction) -> x = y -> x =/= y
+> reflexiveFR' : (x, y : Fraction) -> x = y -> x ~ y
 > reflexiveFR' x x Refl = reflexiveFR x
 
-> symmetricFR : (x, y : Fraction) -> (x =/= y) -> (y =/= x)
+> symmetricFR : (x, y : Fraction) -> (x ~ y) -> (y ~ x)
 > symmetricFR (n,d) (m,e) ndFRme = sym ndFRme
 
 
@@ -254,7 +206,7 @@ something like that
 
 > multNonZeroLeftInjective : (n, m, d : Nat) -> (S d) * n = (S d) * m -> n = m
 
-> transitiveFR : (x, y, z : Fraction) -> x =/= y -> y =/= z -> x =/= z
+> transitiveFR : (x, y, z : Fraction) -> (x ~ y) -> (y ~ z) -> (x ~ z)
 > transitiveFR (n,d) (m,e) (l,f) nSeIsmSd mSfIslSe = 
 >   multNonZeroLeftInjective (n * (S f)) (l * (S d)) e pf where
 >   pf : S e * (n * S f) = S e * (l * (S d))
@@ -280,7 +232,7 @@ something like that
 >     (S e * (l * (S d)))
 >     QED
 
-> multFZeroRightZero : (x : Fraction) -> x * 0 =/= 0
+> multFZeroRightZero : (x : Fraction) -> (x * 0) ~ 0
 > multFZeroRightZero (n,d) =
 >     (n * 0 * (S 0))
 >     ={ cong {f = \k => k * S 0} (multZeroRightZero n) }=
@@ -291,20 +243,19 @@ something like that
 >     (0 * S (d *^ 0))
 >     QED
 
-> multFZeroLeftZero : (x : Fraction) -> 0 * x =/= 0
+> multFZeroLeftZero : (x : Fraction) -> (0 * x) ~ 0
 > multFZeroLeftZero x = 
 >   transitiveFR (0 * x) (x * 0) 0 rel (multFZeroRightZero x) where
 >   rel : 0 * x =/= x * 0
 >   rel = reflexiveFR' (0 * x) (x * 0) (multFCommutative 0 x)
 
 > multFDistributesOverPlusRight : (x,y,z : Fraction) -> 
->                                 x * (y + z) =/= (x * y) + (x * z)
+>                                 (x * (y + z)) ~ ((x * y) + (x * z))
+>
 > multFDistributesOverPlusRight (n,d) (m,e) (l,f) = pf where
 >   pf1 : S (d *^ e) * S (d *^ f) = S d * S (d *^ (e *^ f))
 >   pf1 =
 >     (S (d *^ e) * S (d *^ f))
->     ={ Refl }=
->     ((S d * S e) * (S d * S f))
 >     ={ sym (multAssociative (S d) (S e) (S d * S f)) }=
 >     (S d * (S e * (S d * S f)))
 >     ={ cong {f = \k => S d * k} (multAssociative (S e) (S d) (S f)) }=
@@ -312,8 +263,6 @@ something like that
 >     ={ cong {f = \k => S d * ( k * S f)} (multCommutative (S e) (S d)) }=
 >     (S d * (S d * S e * S f))
 >     ={ cong {f = \k => S d * k} (sym (multAssociative (S d) (S e) (S f))) }=
->     (S d * (S d * (S e * S f)))
->     ={ Refl }=
 >     (S d * S (d *^ (e *^ f)))
 >     QED
 >   pf2' : (w,x,y,z : Nat) -> w * (x * S y) * S z = w * x * S (z *^ y)
@@ -322,8 +271,6 @@ something like that
 >     ={ cong {f = \k => k * S z} (multAssociative w x (S y)) }=
 >     (w * x * S y * S z)
 >     ={ sym (multAssociative (w * x) (S y) (S z)) }=
->     (w * x * (S y * S z))
->     ={ Refl }=
 >     (w * x * S (y *^ z))
 >     ={ cong {f =  \k => w * x * S k} (multUpCommutative y z) }=
 >     (w * x * S (z *^ y))
@@ -341,9 +288,6 @@ something like that
 >     QED
 >   pf =
 >     (n * (m * S f + l * S e) * S ((d *^ e) *^ (d *^ f)))
->     ={ cong {f = \k => n * (m * S f + l * S e) * k} 
->       (multUpLemma (d *^ e) (d *^ f)) }=
->     (n * (m * S f + l * S e) * (S (d *^ e) * S (d *^ f)))
 >     ={ cong {f = \k => k * (S (d *^ e) * S (d *^ f)) } 
 >       (multDistributesOverPlusRight n (m * S f) (l * S e)) }=
 >     ((n * (m * S f) + n * (l * S e)) * (S (d *^ e) * S (d *^ f))) 
@@ -356,8 +300,9 @@ something like that
 >     QED
 
 
-> multFDistributesOverPlusLeft : (x,y,z : Fraction) -> 
->                                 (x + y) * z =/= (x * z) + (y * z)
+> multFDistributesOverPlusLeft :  (x,y,z : Fraction) -> 
+>                                 ((x + y) * z) ~ ((x * z) + (y * z))
+>
 > multFDistributesOverPlusLeft x y z = 
 >   transitiveFR ((x + y) * z) (z * x + z * y) (x * z + y * z) 
 >     (transitiveFR ((x + y) * z) (z * (x + y)) (z * x + z * y)     
@@ -384,10 +329,14 @@ lemmata
 > notZIsS Z     pf = absurd (pf Refl)
 > notZIsS (S p) _  = ( p ** Refl)
 
+> syntax [d] "|" [m] = Divisor d m
+
+> syntax [m] "/" [dDm] "/" [d] = divBy d m dDm
+
 
 a divisor of (S n) is an S _ 
 
-> divPosPos : (n, m : Nat) -> n `Divisor` (S m) -> 
+> divPosPos : (n, m : Nat) -> (n | (S m)) -> 
 >                 ( p : Nat ** n = S p )
 > divPosPos Z m nDivSm = 
 >   absurd (ZnotS zIsS) where
@@ -395,8 +344,8 @@ a divisor of (S n) is an S _
 >   zIsS = getProof nDivSm
 > divPosPos (S p) _ _ = (p ** Refl)
 
-> divByPosPos : (n, m : Nat) -> (nDivSm : n `Divisor` (S m)) ->
->               (p : Nat ** (divBy n (S m) nDivSm) = S p)
+> divByPosPos : (n, m : Nat) -> (nDSm : (n | (S m))) ->
+>               (p : Nat ** ((S m) /nDSm/ n) = S p)
 > divByPosPos n m (Evidence q nqIsSm) =
 >   divPosPos q m (Evidence n qnIsSm) where
 >     qnIsSm : q * n = S m
@@ -415,7 +364,7 @@ a divisor of (S n) is an S _
 >   gIsGCD : GCD g n (S d)
 >   gIsGCD = getProof gcd
 >   n'  : Nat
->   n'  = divBy g n (gcdDivisorFst gIsGCD)
+>   n'  = n /(gcdDivisorFst gIsGCD)/ g
 >   d'  : Nat
 >   d'  = getWitness (divByPosPos g d (gcdDivisorSnd gIsGCD))
 >   
@@ -438,7 +387,7 @@ and an Iso:
 
 > fRToKerTL : {x, y : Fraction} -> FR x y -> toLowest x = toLowest y
 
-> fRFromKerTL : {x, y : Fraction} -> toLowest x = toLowest y -> FR x y 
+> fRFromKerTL : {x, y : Fraction} -> toLowest x = toLowest y -> x ~ y 
 
 
 > plus : NonNegQ2 -> NonNegQ2 -> NonNegQ2
@@ -470,9 +419,9 @@ and an Iso:
 
 
 > plusInvariant : (left1, left2, right1, right2 : Fraction) -> 
->                 (left1  =/= left2 ) -> 
->                 (right1 =/= right2) -> 
->                 left1 + right1 =/= left2 + right2
+>                 (left1  ~ left2 ) -> 
+>                 (right1 ~ right2) -> 
+>                 (left1 + right1) ~ (left2 + right2)
 
  plusInvariant (n,d) (m,e) (l,f) (k,g) nSfIslSd mSgIskSe = 
    ((n * S f + l * S d) * (S e * S g))
@@ -492,16 +441,6 @@ and an Iso:
    pf : x  0
 
 
-
-
-
-
-
-
-
-
-
-
 -------- more lemmata 
 
 
@@ -509,12 +448,9 @@ and an Iso:
 >                  (S d) * m = (S d) * n ->
 >                   m = n
 
-> divByDivisorLemma : (d, m, n : Nat) -> 
->                     (mDn : m     `Divisor` n) -> 
->                     (dDm : (S d) `Divisor` m) -> 
->                     (dDn : (S d) `Divisor` n) ->
->                     (divBy (S d) m dDm) `Divisor` 
->                       (divBy (S d) n dDn)
+> divByDivisorLemma : (d, m, n : Nat) -> (m | n) -> 
+>                     (dDm : ((S d) | m)) -> (dDn : ((S d) | n)) ->
+>                     (m /dDm/ (S d)) | (n /dDn/ (S d))
 > divByDivisorLemma d m n (Evidence k mkIsn) 
 >                         (Evidence r sdrIsm) 
 >                         (Evidence t sdtIsn) =
@@ -534,13 +470,14 @@ and an Iso:
 > gcdProdLemma :  (alg : (a : Nat) -> (b : Nat) -> (d : Nat ** GCD d a b)) ->
 >                 (m, n, l : Nat) ->
 >                 gcd (alg (m * n) (m * l)) = m * gcd (alg n l)
+>
 > gcdProdLemma alg Z n l = gcdUnique (gcd (alg Z Z)) 0 (getProof (alg Z Z)) gcdZZZ where
 >   gcdZZZ : GCD 0 0 0
 >   gcdZZZ = mkGCD (anyDivisorZ 0) (anyDivisorZ 0) (\d => \x => \y => anyDivisorZ d) 
 > gcdProdLemma alg (S m) n l = pf where
->   mDmn : m `Divisor` (m * n)
+>   mDmn : (m | (m * n))
 >   mDmn = Evidence n Refl
->   mDml : m `Divisor` (m * l)
+>   mDml : (m | (m * l))
 >   mDml = Evidence l Refl
 >   pf = ?lilo
 
