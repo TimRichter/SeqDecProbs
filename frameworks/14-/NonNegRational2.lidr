@@ -416,6 +416,18 @@ and an Iso:
 >   fromInteger = fromIntegerQ
 >   abs = id
 
+--- how to circumvent the type class "injectivity" issue...?
+
+> NonNegQ3 : Type
+> NonNegQ3 = SQuot tlEndo
+
+> instance Num A => Num (Squot (normalize : IdemPotentEndo A))  where
+>   (+) = liftQBinop normalize (+)
+>   (*) = liftQBinop normalize (*)
+>   (-) = liftQBinop normalize (-)
+>   fromInteger = (can normalize) . fromInteger
+>   abs = id
+
 
 
 > plusInvariant : (left1, left2, right1, right2 : Fraction) -> 
