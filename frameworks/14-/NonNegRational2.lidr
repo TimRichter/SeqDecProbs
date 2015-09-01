@@ -421,11 +421,11 @@ and an Iso:
 > NonNegQ3 : Type
 > NonNegQ3 = SQuot tlEndo
 
-> instance Num A => Num (Squot (normalize : IdemPotentEndo A))  where
->   (+) = liftQBinop normalize (+)
->   (*) = liftQBinop normalize (*)
->   (-) = liftQBinop normalize (-)
->   fromInteger = (can normalize) . fromInteger
+> instance [nonnegq3] Num NonNegQ3  where
+>   (+) = liftQBinop tlEndo (+)
+>   (*) = liftQBinop tlEndo (*)
+>   (-) = liftQBinop tlEndo (-)
+>   fromInteger = (can tlEndo) . fromInteger
 >   abs = id
 
 
