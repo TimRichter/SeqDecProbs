@@ -23,172 +23,170 @@ So to construct the quotient by any given equivalence ~ on
 A, it suffices to find an idempotent endomap c such that
 the relations  ~ and (ker c) are isomorphic.
 
+> Idempotent : {A : Type} -> (c : (A -> A)) -> Type
+> Idempotent {A} c = (x : A) -> (c (c x)) = (c x)
 
-> IsIdempotent : {A : Type} -> (c : (A -> A)) -> Type
-> IsIdempotent {A} c = (x : A) -> (c (c x)) = (c x)
+----------------------------------------------------------
+module parameters
 
-> Base : Type
+> parameters (Base : Type,
+>             normalize : Base -> Base,
+>             normalizeIdem : Idempotent normalize)
 
-> normalize : Base -> Base
-> normalizeIsIdem : IsIdempotent normalize
+----------------------------------------------------------
 
-
-> data SQuot : Type where
->   Class : (x : Base) -> normalize x = x -> SQuot
+>
+>   data SQuot : Type where
+>     Class : (x : Base) -> normalize x = x -> SQuot
 
 Any class has a "canonical" representant
 
-> representant : SQuot -> Base
-> representant (Class x _) = x
+>   repr : SQuot -> Base
+>   repr (Class x _) = x
 
 which is a fixpoint of normalize (i.e. "is normal"):
 
-> representantIsNormal :  (cl : SQuot) -> 
->                         normalize (representant cl) = representant cl
-> representantIsNormal (Class _ nxIsx) = nxIsx
+>   reprNormal :  (cl : SQuot) -> 
+>                 normalize (repr cl) = repr cl
+>   reprNormal (Class _ nxIsx) = nxIsx
 
-> ||| to prove two elements x y in the quotient equal
-> ||| it suffices to prove rx = ry for the canonical representants rx and ry 
->
-> quotEqLemma : (cl1, cl2 : SQuot) -> 
->               (representant cl1 = representant cl2) ->
->               cl1 = cl2
-> quotEqLemma (Class q nqIsq) (Class q nqIsq') Refl = 
->   cong (uniqueEq (normalize q) q nqIsq nqIsq')
+>   ||| to prove two elements x y in the quotient equal
+>   ||| it suffices to prove rx = ry for the canonical representants rx and ry 
+>  
+>   quotEqLemma : (cl1, cl2 : SQuot) -> 
+>                 (repr cl1 = repr cl2) ->
+>                 cl1 = cl2
+>   quotEqLemma (Class q nqIsq) (Class q nqIsq') Refl = 
+>     cong (uniqueEq (normalize q) q nqIsq nqIsq')
 
+>   ||| since normalize is idempotent, there is a canonical map 
+>   ||| Base -> SQuot, assigning to |x : Base| its equivalence class
+>  
+>   classOf : Base -> SQuot
+>   classOf y = Class (normalize y) (normalizeIdem y)
 
-> ||| since normalize is idempotent, there is a canonical map 
-> ||| Base -> SQuot, assigning to |x : Base| its equivalence class
->
-> classOf : Base -> SQuot
-> classOf y = Class (normalize y) (normalizeIsIdem y)
+>   ||| the representant of the class of |x| is just |normalize x|
 
-> ||| the representant of image of the class of |x| is just |normalize x|
+>   reprAfterClassOfIsNormalize :   (x : Base) ->
+>                                   repr (classOf x) = normalize x
+>   reprAfterClassOfIsNormalize x = Refl
 
-> repAfterClassOfIsNormalize :  (x : Base) ->
->                               representant (classOf x) = normalize x
-> repAfterClassOfIsNormalize x = Refl
+>   ||| the classes of elements |x| and |y| that are in the 
+>   ||| |kernel normalize|  relation (i.e. such that c x = c y) are equal
+>   
+>   classOfEqualLemma : (x, y : Base) -> 
+>                       (normalize x = normalize y) -> 
+>                       (classOf x) = (classOf y)
+>  
+>   classOfEqualLemma x y nxIsny = quotEqLemma (classOf x) (classOf y) rCxIsrCy where
+>     rCxIsrCy : repr (classOf x) = repr (classOf y)
+>     rCxIsrCy =
+>       (repr (classOf x))    ={ reprAfterClassOfIsNormalize x        }=
+>       (normalize x)         ={ nxIsny                               }=
+>       (normalize y)         ={ sym (reprAfterClassOfIsNormalize y)  }=
+>       (repr (classOf y))    QED
 
-> ||| the classes of elements x y that are in the ker c relation 
-> ||| (i.e. such that c x = c y) are equal
-> 
-> classOfMapLemma : (x, y : Base) -> (normalize x = normalize y) -> 
->                   (classOf x) = (classOf y)
-> classOfMapLemma x y nxIsny = quotEqLemma (classOf x) (classOf y) rCxIsrCy where
->   rCxIsrCy : representant (classOf x) = representant (classOf y)
->   rCxIsrCy =
->     (representant (classOf x))    ={ repAfterClassOfIsNormalize x       }=
->     (normalize x)                 ={ nxIsny                             }=
->     (normalize y)                 ={ sym (repAfterClassOfIsNormalize y) }=
->     (representant (classOf y))    QED
+>   ||| 
+>  
+>   classOfAfterReprIsId :  (cl : SQuot) -> 
+>                           classOf (repr cl) = cl
+>   classOfAfterReprIsId cl = quotEqLemma (classOf (repr cl)) cl sameRepr where
+>     sameRepr : repr (classOf (repr cl)) = repr cl
+>     sameRepr =
+>       (repr (classOf (repr cl)))
+>       ={ reprAfterClassOfIsNormalize (repr cl) }=
+>       (normalize (repr cl))
+>       ={ reprNormal cl }=
+>       (repr cl)
+>       QED
+   
+   ||| we can use this to prove surjectivity of can
 
-> ||| 
->
-> classOfAfterRepIsId : (cl : SQuot) -> 
->                       classOf (representant cl) = cl
-> classOfAfterRepIsId cl = quotEqLemma (classOf (representant cl)) cl sameRep where
->   sameRep : representant (classOf (representant cl)) = representant cl
->   sameRep =
->     (representant (classOf (representant cl)))
->     ={ repAfterClassOfIsNormalize (representant cl) }=
->     (normalize (representant cl))
->     ={ representantIsNormal cl }=
->     (representant cl)
->     QED
-
-
-
- 
- ||| we can use this to prove surjectivity of can
-
- canSurj : {A : Type} -> {c : IdempotentEndo A} -> 
-           (x : SQuot c) ->
-           Sigma A (\y => can c y = x)
- canSurj {c} (x ** cxIsx) = ( x  **  canCxIsx  ) where
-   cxIsx' : getWitness (can c x) = x
-   cxIsx' = trans (canLemma c x) cxIsx
-   canCxIsx : (can c x) = (x ** cxIsx)
-   canCxIsx = quotEqLemma (can c x) (x ** cxIsx) 
-              (cong {f = getWitness c} cxIsx')
-
-
- ||| or, in other words, getWitness is a section
- ||| of (can c)
-
- canSurj' :  {A : Type} -> {c : IdempotentEndo A} -> 
+   canSurj : {A : Type} -> {c : IdempotentEndo A} -> 
              (x : SQuot c) ->
-             ((can c) . getWitness) x = x
- canSurj' {c} (x ** cxIsx) = canCxIsx where
-   cxIsx' : getWitness (can c x) = x
-   cxIsx' = trans (canLemma c x) cxIsx
-   canCxIsx : (can c x) = (x ** cxIsx)
-   canCxIsx = quotEqLemma (can c x) (x ** cxIsx) 
-              (cong {f = getWitness c} cxIsx')
-
- ||| lift functions A -> B to SQuot c -> B by precomposing 
- ||| with getWitness, i.e. restrict them to the Fixpoints of c
-
- liftQ : {A, B : Type} -> (c : IdempotentEndo A) -> (f : A -> B) ->
-         SQuot c -> B
- liftQ c f ( x ** _ ) = f x
-
- ||| same for curried functions of two arguments
-
- liftQ2 : {A, B : Type} -> (c : IdempotentEndo A) -> 
-         (f : A -> A -> B) ->
-         SQuot c -> SQuot c -> B
- liftQ2 c f ( x ** _ ) ( y ** _ ) = f x y
-
- ||| for c-invariant functions f : A -> B 
- ||| (c x = cy => f x = f y, i.e. the kernel 
- ||| of c is a congruence for f), (liftQ c f) . (can c)
- ||| is (pointwise equal to) f
-
- liftQcanLemma : {A, B : Type} -> (c : IdempotentEndo A) -> 
-                 (f : A -> B) ->
-                 ((x, y : A) -> ((getWitness c) x = (getWitness c) y) -> f x = f y) ->
-                 (x : A) -> ((liftQ c f) . (can c)) x = f x
- liftQcanLemma (c ** cIdem) f fIsInv x = fIsInv (c x) x (cIdem x)
-
- ||| same for curried functions of two arguments
-
- liftQcanLemma2 :  {A, B : Type} -> (c : IdempotentEndo A) -> 
-                   (f : A -> A -> B) ->
-                   ( (x, x', y, y' : A) -> 
-                     ((getWitness c) x = (getWitness c) y) -> 
-                     ((getWitness c) x' = (getWitness c) y') -> 
-                     f x x' = f y y') ->
-                   (x, y : A) -> (liftQ2 c f) (can c x) (can c y) = f x y
- liftQcanLemma2 (c ** cIdem) f fIsInv x y = fIsInv (c x) (c y) x y (cIdem x) (cIdem y)
+             Sigma A (\y => can c y = x)
+   canSurj {c} (x ** cxIsx) = ( x  **  canCxIsx  ) where
+     cxIsx' : getWitness (can c x) = x
+     cxIsx' = trans (canLemma c x) cxIsx
+     canCxIsx : (can c x) = (x ** cxIsx)
+     canCxIsx = quotEqLemma (can c x) (x ** cxIsx) 
+                (cong {f = getWitness c} cxIsx')
 
 
- ||| helper for liftQBinop
+>   ||| lift functions Base -> B to SQuot -> B by precomposing 
+>   ||| with getWitness, i.e. restrict them to the Fixpoints of c
+>  
+>   lift : {B : Type} -> (f : Base -> B) ->
+>           SQuot -> B
+>   lift f (Class x _) = f x
+>  
+>   ||| same for curried functions of two arguments
+>  
+>   lift2 : {B : Type} -> (f : Base -> Base -> B) ->
+>           SQuot -> SQuot -> B
+>   lift2 f (Class x _) (Class y _) = f x y
+>  
+>   ||| functions |f : Base -> B| invariant under the |kernel normalize|
+>   ||| relation (i.e. |normalize x = normalize y -> f x = f y|),  
+>   ||| |(liftQ f) . (classOf c)| is (pointwise equal to) |f|
+>  
+>   liftClassOfLemma :  {B : Type} ->
+>                       (f : Base -> B) ->
+>                       ((x, y : Base) -> (normalize x = normalize y) -> f x = f y) ->
+>                       (x : Base) -> ((lift f) . classOf) x = f x
+>   liftClassOfLemma f fInv x = fInv (normalize x) x (normalizeIdem x)
+>  
+>   ||| same for curried functions of two arguments
+>  
+>   liftClassOfLemma2 : {B : Type} -> 
+>                     (f : Base -> Base -> B) ->
+>                     ( (x, x', y, y' : Base) -> 
+>                       (normalize x  = normalize y ) -> 
+>                       (normalize x' = normalize y') -> 
+>                       f x x' = f y y') ->
+>                     (x, y : Base) -> 
+>                     (lift2 f) (classOf x) (classOf y) = f x y
+>  
+>   liftClassOfLemma2 f fInv x y = 
+>     fInv (normalize x) (normalize y) x y (normalizeIdem x) (normalizeIdem y)
 
- postcan : {A : Type} -> (c : IdempotentEndo A) ->
-           (op : A -> A -> A) ->
-           (A -> A -> SQuot c)
- postcan c op x y = can c (x `op` y)
 
- ||| important special case: binary operations on A define
- ||| binary operations on SQuot c
+>   ||| helper for liftQBinop
+>  
+>   postcan : (op : Base -> Base -> Base) ->
+>             (Base -> Base -> SQuot)
+>   postcan op x y = classOf (x `op` y)
+>  
+>   ||| important special case: binary operations on Base define
+>   ||| binary operations on SQuot
+>  
+>   liftBinop : (op : Base -> Base -> Base) ->
+>               (SQuot -> SQuot -> SQuot) 
+>   liftBinop op x y = lift2 (postcan op) x y
+>  
 
- liftQBinop : {A : Type} -> (c : IdempotentEndo A) ->
-               (op : A -> A -> A) ->
-               (SQuot c -> SQuot c -> SQuot c)
- liftQBinop {A} c op x y = liftQ2 c (postcan c op) x y
+<   instance Num Base => Num SQuot where
+<     (+) = liftBinop (+)
+<     (-) = liftBinop (-)
+<     (*) = liftBinop (*)
+<     fromInteger = classOf . fromInteger
+<     abs = classOf . (lift abs) 
 
- ||| 
 
- liftQBinopLemma :  {A : Type} -> (c : IdempotentEndo A) -> 
-                   (op : A -> A -> A) ->
-                   ( (x, x', y, y' : A) -> 
-                     ((getWitness c) x = (getWitness c) y) -> 
-                     ((getWitness c) x' = (getWitness c) y') -> 
-                     can c (x `op` x') = can c (y `op` y')  
-                   ) ->
-                   (x, y : A) -> 
-                   (liftQBinop c op) (can c x) (can c y) = can c (x `op` y)
- liftQBinopLemma {A} c op opIsInv x y = liftQcanLemma2 {A} {B=SQuot c} c (postcan c op) opIsInv x y
+
+>   ||| 
+>  
+>   liftBinopLemma : (op : Base -> Base -> Base) ->
+>                     ( (x, x', y, y' : Base) -> 
+>                       (normalize x = normalize y) -> 
+>                       (normalize x' = normalize y') -> 
+>                       classOf (x `op` x') = classOf (y `op` y')  
+>                     ) ->
+>                     (x, y : Base) -> 
+>                     (liftBinop op) (classOf x) (classOf y) = classOf (x `op` y)
+>  
+>   liftBinopLemma op opInv x y = liftClassOfLemma2 {B=SQuot} (postcan op) opInv x y
+
 
  ||| combined with canSurj', we obtain a
  ||| "computation rule" for the lifted operation.

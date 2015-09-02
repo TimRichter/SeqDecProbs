@@ -1,22 +1,17 @@
 > module ZeroQuotient
 
-> import SplitQuotient
+> import SplitQuotient3
 
-> const0Idem : IsIdempotent {A = Nat} (const 0)
-> const0Idem n = Refl
-
-> const0 : IdempotentEndo Nat
-> const0 = (const 0 ** const0Idem)
+> SplitQuotient3.Base = Nat
+> SplitQuotient3.normalize x = 0
+> SplitQuotient3.normalizeIdem x = Refl
 
 
-> MyUnit : Type
-> MyUnit = SQuot const0
+> MyUnit : Type 
+> MyUnit = SQuot
 
-> instance [myunit] Num MyUnit where
->   (+) = liftQBinop const0 (+)
->   (*) = liftQBinop const0 (*)
->   (-) = liftQBinop const0 (-)
->   fromInteger = (can const0) . fromInteger
->   abs = id
+testnum
 
+> poly : MyUnit -> MyUnit
+> poly x = 2 * x + 7
 
