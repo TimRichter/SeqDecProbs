@@ -36,93 +36,88 @@ module parameters
 
 ----------------------------------------------------------
 
->
+> ||| Define the quotient type as elements of Base
+> ||| that are fixed by |normalize|
+> |||
 > data SQuot : Type where
 >   Class : (x : Base) -> normalize x = x -> SQuot
-
-Any class has a "canonical" representant
-
+>
+> ||| Any class has a "canonical" representant
+> |||
 > repr : SQuot -> Base
 > repr (Class x _) = x
-
-which is a fixpoint of normalize (i.e. "is normal"):
-
+>
+> ||| which is a fixpoint of |normalize| (i.e. "normal"):
+>
 > reprNormal :  (cl : SQuot) -> 
 >               normalize (repr cl) = repr cl
 > reprNormal (Class _ nxIsx) = nxIsx
-
-> ||| to prove two elements x y in the quotient equal
-> ||| it suffices to prove rx = ry for the canonical representants rx and ry 
-> 
+>
+> ||| since Idris has UIP, two elements |cl1, cl2 : SQuot|  
+> ||| are equal if their representants are equal 
+> |||
 > quotEqLemma : (cl1, cl2 : SQuot) -> 
->               (repr cl1 = repr cl2) ->
+>               repr cl1 = repr cl2 ->
 >               cl1 = cl2
 > quotEqLemma (Class q nqIsq) (Class q nqIsq') Refl = 
 >   cong (uniqueEq (normalize q) q nqIsq nqIsq')
-
-> ||| since normalize is idempotent, there is a canonical map 
-> ||| Base -> SQuot, assigning to |x : Base| its equivalence class
-> 
+>
+> ||| since |normalize| is idempotent, there is a canonical 
+> ||| map |Base -> SQuot|, assigning to |x : Base| its 
+> ||| equivalence class, represented by |normalize x|
+> ||| 
 > classOf : Base -> SQuot
-> classOf y = Class (normalize y) (normalizeIdem y)
-
-> syntax "~" [x] = classOf x
-
-
-
-> ||| the representant of the class of |x| is just |normalize x|
-
+>
+> classOf x = Class (normalize x) (normalizeIdem x)
+>
+> syntax "[" [x] "]" = classOf x
+>
+> ||| the representant of the class of |x| is |normalize x|
+>
 > reprAfterClassOfIsNormalize :   (x : Base) ->
->                                 repr (classOf x) = normalize x
+>                                 repr [x] = normalize x
 > reprAfterClassOfIsNormalize x = Refl
 
 > ||| the classes of elements |x| and |y| that are in the 
-> ||| |kernel normalize|  relation (i.e. such that c x = c y) are equal
+> ||| |kernel normalize| relation (i.e. such that c x = c y) 
+> ||| are equal
 > 
 > classOfEqualLemma : (x, y : Base) -> 
 >                     (normalize x = normalize y) -> 
->                     (classOf x) = (classOf y)
+>                     ([x] = [y])
 > 
-> classOfEqualLemma x y nxIsny = quotEqLemma (classOf x) (classOf y) rCxIsrCy where
->   rCxIsrCy : repr (classOf x) = repr (classOf y)
+> classOfEqualLemma x y nxIsny = quotEqLemma [x] [y] rCxIsrCy where
+>   rCxIsrCy : repr [x] = repr [y]
 >   rCxIsrCy =
->     (repr (classOf x))    ={ reprAfterClassOfIsNormalize x        }=
->     (normalize x)         ={ nxIsny                               }=
->     (normalize y)         ={ sym (reprAfterClassOfIsNormalize y)  }=
->     (repr (classOf y))    QED
+>     (repr [x])      ={ reprAfterClassOfIsNormalize x        }=
+>     (normalize x)   ={ nxIsny                               }=
+>     (normalize y)   ={ sym (reprAfterClassOfIsNormalize y)  }=
+>     (repr [y])      QED
 
-> ||| 
+> ||| taking the class of the representant of of class is the 
+> ||| identity 
 > 
 > classOfAfterReprIsId :  (cl : SQuot) -> 
->                         classOf (repr cl) = cl
-> classOfAfterReprIsId cl = quotEqLemma (classOf (repr cl)) cl sameRepr where
->   sameRepr : repr (classOf (repr cl)) = repr cl
+>                         [repr cl] = cl
+>
+> classOfAfterReprIsId cl = quotEqLemma [repr cl] cl sameRepr where
+>   sameRepr : repr [repr cl] = repr cl
 >   sameRepr =
->     (repr (classOf (repr cl)))
+>     (repr [repr cl])
 >     ={ reprAfterClassOfIsNormalize (repr cl) }=
 >     (normalize (repr cl))
 >     ={ reprNormal cl }=
 >     (repr cl)
 >     QED
-   
-   ||| we can use this to prove surjectivity of can
 
-   canSurj : {A : Type} -> {c : IdempotentEndo A} -> 
-             (x : SQuot c) ->
-             Sigma A (\y => can c y = x)
-   canSurj {c} (x ** cxIsx) = ( x  **  canCxIsx  ) where
-     cxIsx' : getWitness (can c x) = x
-     cxIsx' = trans (canLemma c x) cxIsx
-     canCxIsx : (can c x) = (x ** cxIsx)
-     canCxIsx = quotEqLemma (can c x) (x ** cxIsx) 
-                (cong {f = getWitness c} cxIsx')
-
-
-> ||| lift functions Base -> B to SQuot -> B by precomposing 
-> ||| with getWitness, i.e. restrict them to the Fixpoints of c
+> ||| functions |Base -> B| can be "lifted" to functions 
+> ||| |SQuot -> B| (by just restricting them to the Fixpoints 
+> ||| of normalize
 > 
-> lift : {B : Type} -> (f : Base -> B) ->
+> lift :  {B : Type} -> 
+>         (f : Base -> B) ->
 >         SQuot -> B
+>
 > lift f (Class x _) = f x
 > 
 > ||| same for curried functions of two arguments
