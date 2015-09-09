@@ -26,7 +26,7 @@ preliminary definitions
 >               BinRel A -> 
 >               Type
 > Compatible {A} {B} f (MkBinRel rel) = 
->               (x, x' : A) -> 
+>               {x, x' : A} -> 
 >               rel x x' -> 
 >               f x = f x'
 
@@ -53,18 +53,18 @@ preliminary definitions
 > ||| 
 > ||| In absence of function extensionality, liftability of functions
 > ||| |f : A -> A -> B| satisfying |Compatible2 f rel| is stronger
-> ||| than |liftC|, and since we need it, we will it in the the
-> ||| specification of the quotient class (|liftC2| and |liftC2Comp|). 
-> ||| So in instance declarations, two more proofs have to be given.
-> ||| Usually, though, these will be just slight modifications of the 
-> ||| proofs for |liftC| and |liftCComp|.
+> ||| than |liftC|, and since we need it, we also specify |liftC2| and 
+> ||| |liftC2Comp| within the Quotient class. 
+> ||| That means more work in instance declarations, two more proofs 
+> ||| have to be given. Usually, though, these will be just slight 
+> ||| modifications of the proofs for |liftC| and |liftCComp|.
 >
 > Compatible2 : {A, B : Type} -> 
 >               (A -> A -> B) -> 
 >               BinRel A -> 
 >               Type
 > Compatible2 {A} {B} f (MkBinRel rel) = 
->               (x, x', y, y' : A) -> 
+>               {x, x', y, y' : A} -> 
 >               rel x x' ->
 >               rel y y' ->
 >               f x y = f x' y'
@@ -95,9 +95,7 @@ preliminary definitions
  
 > class Quotient (A : Type) (rel : BinRel A) (Q : Type) where
 >   cla        : A -> Q
->   claEq      : {x, y : A} ->
->                (unwrapBinRel rel x y) ->
->                cla x = cla y
+>   claC       : Compatible cla rel
 >   liftC      : {B : Type} ->
 >                (f : A -> B) ->
 >                (Compatible f rel) ->
