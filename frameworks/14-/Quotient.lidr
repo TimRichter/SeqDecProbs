@@ -70,6 +70,61 @@ preliminary definitions
 >               f x y = f x' y'
 >
 
+> ||| different approach: formulate the lifting
+> ||| property for compatible maps to function types
+> ||| we can recover the normal lifting property by
+> ||| identifying a type C with functions () -> C
+> ||| while at the same time we will be able to prove lift2 and
+> ||| analogues with more arguments...
+>
+> CompatibleF : {A, B, C : Type} ->
+>               (A -> B -> C) ->
+>               BinRel A ->
+>               Type
+> CompatibleF {A} {B} {C} f (MkBinRel rel) =
+>             {x, x' : A} ->
+>             rel x x' ->
+>             (b : B) ->
+>             f x b = f x' b
+
+
+> toUnitMap : {A : Type} -> A -> () -> A
+> toUnitMap x = \ y => x
+
+> fromUnitMap : {A : Type} -> ( () -> A ) -> A
+> fromUnitMap f = f ()
+
+> ||| no problem here
+>
+> fromToUnitMap : {A : Type} -> ( x : A ) -> fromUnitMap (toUnitMap x) = x
+> fromToUnitMap {A} x = Refl
+
+< ||| but this (which is what remains to prove A and () -> A isomorphic) 
+< ||| is not provable
+<
+< toFromUnitMap : {A : Type} -> (f : () -> A) -> toUnitMap (fromUnitMap f) = f
+< toFromUnitMap {A} f = ?notProvable
+
+> ||| anyway, we have the following,
+> ||| which might be enough...
+>
+> toFromUnitMapH : {A : Type} -> 
+>                 (f : () -> A) -> 
+>                 (x : ()) -> 
+>                 (toUnitMap (fromUnitMap f)) x = f x
+> toFromUnitMapH {A} f () = Refl
+
+> compToCompFToUnitMap :  {A, B : Type} -> 
+>                         (f : A -> B) -> 
+>                         (r : BinRel A) ->
+>                         Compatible f r -> 
+>                         CompatibleF ((toUnitMap {A=B}) . f) r
+> compToCompFToUnitMap {A} {B} f (MkBinRel rel) g = lili where
+>   lili {x} {x'} xRx' _ = g xRx'
+>   lala : {x, x' : A} -> (rel x x') -> () -> f x = f x'
+>   lala = ?lulu
+
+
 > {-- 
 >     lifting property for dependent functions
 >     probably can be deduced from lifting property
