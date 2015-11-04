@@ -1,7 +1,7 @@
 > module Mod7
 
 > import SplitQuotient3
-> import NatProperties
+> --import NatProperties
 
 > %default total
 
