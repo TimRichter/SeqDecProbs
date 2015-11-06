@@ -10,24 +10,25 @@
 > mod7 : Nat -> Nat
 > mod7 n with (decLT n 7)
 >   | (Yes p) = n
->   | (No  _) = assert_total (mod7 (n - 7))
+>   | (No  _) = assert_total (Mod7.mod7 (minus n 7))
 
-> KernelIdempotentQuotient.normalize = mod7
 
-> mod7Idem : (n : Nat) -> mod7 (mod7 n) = mod7 n
-> mod7Idem n = lemma2 (mod7 n) (lemma1 n) where
+> KernelIdempotentQuotient.normalize = Mod7.mod7
+
+> mod7Idem : (n : Nat) -> Mod7.mod7 (Mod7.mod7 n) = Mod7.mod7 n
+> mod7Idem n = lemma2 (Mod7.mod7 n) (lemma1 n) where
 >
->   lemma1 : (n : Nat) -> (mod7 n) `LT` 7
+>   lemma1 : (n : Nat) -> (Mod7.mod7 n) `LT` 7
 >   lemma1 n with (decLT n 7)
 >     | (Yes p) = p
->     | (No  _) = assert_total (lemma1 (n - 7))
+>     | (No  _) = assert_total (lemma1 (minus n 7))
 >
->   lemma2 : (n : Nat) -> n `LT` 7 -> mod7 n = n
+>   lemma2 : (n : Nat) -> n `LT` 7 -> Mod7.mod7 n = n
 >   lemma2 n nLT7 with (decLT n 7)
 >     | (Yes p) = Refl
 >     | (No  r) = absurd (r nLT7)
 
-> KernelIdempotentQuotient.normalizeIdem = mod7Idem
+> KernelIdempotentQuotient.normalizeIdem = Mod7.mod7Idem
 
 
 > Mod7 : Type
