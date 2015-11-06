@@ -1,10 +1,10 @@
 > module ZeroQuotient
 
-> import SplitQuotient3
+> import KernelIdempotentQuotient
 
-> SplitQuotient3.Base = Nat
-> SplitQuotient3.normalize x = 0
-> SplitQuotient3.normalizeIdem x = Refl
+> KernelIdempotentQuotient.Base = Nat
+> KernelIdempotentQuotient.normalize x = 0
+> KernelIdempotentQuotient.normalizeIdem x = Refl
 
 
 > MyUnit : Type 

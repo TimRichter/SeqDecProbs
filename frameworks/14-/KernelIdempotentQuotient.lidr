@@ -1,4 +1,4 @@
-> module SplitQuotient3
+> module KernelIdempotentQuotient
 
 > import Syntax.PreorderReasoning
 > import EqualityProperties
@@ -24,8 +24,9 @@ identified with the quotient of A by that equivalence.
 module parameters
 
 > Base : Type
-> normalize : SplitQuotient3.Base -> SplitQuotient3.Base
-> normalizeIdem : Idempotent SplitQuotient3.normalize
+> normalize : KernelIdempotentQuotient.Base -> 
+>             KernelIdempotentQuotient.Base
+> normalizeIdem : Idempotent KernelIdempotentQuotient.normalize
 
 ----------------------------------------------------------
 

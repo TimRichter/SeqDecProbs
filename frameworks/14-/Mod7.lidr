@@ -1,18 +1,18 @@
 > module Mod7
 
-> import SplitQuotient3
-> --import NatProperties
+> import KernelIdempotentQuotient
+> import NatProperties
 
 > %default total
 
-> SplitQuotient3.Base = Nat
+> KernelIdempotentQuotient.Base = Nat
 
 > mod7 : Nat -> Nat
 > mod7 n with (decLT n 7)
 >   | (Yes p) = n
 >   | (No  _) = assert_total (mod7 (n - 7))
 
-> SplitQuotient3.normalize = mod7
+> KernelIdempotentQuotient.normalize = mod7
 
 > mod7Idem : (n : Nat) -> mod7 (mod7 n) = mod7 n
 > mod7Idem n = lemma2 (mod7 n) (lemma1 n) where
@@ -27,7 +27,7 @@
 >     | (Yes p) = Refl
 >     | (No  r) = absurd (r nLT7)
 
-> SplitQuotient3.normalizeIdem = mod7Idem
+> KernelIdempotentQuotient.normalizeIdem = mod7Idem
 
 
 > Mod7 : Type
