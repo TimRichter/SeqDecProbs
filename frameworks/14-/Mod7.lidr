@@ -8,8 +8,6 @@
 > n : Integer
 > n = 7
 
-<<<<<<< HEAD
-=======
 > SQ.Base = Integer
 > SQ.Relation x y = (Prelude.Classes.modBigInt x Mod7.n) = (Prelude.Classes.modBigInt y Mod7.n)
 > SQ.normalize x = Prelude.Classes.modBigInt x Mod7.n
@@ -22,7 +20,6 @@
 
 > test : (x, y : Int) -> rel x y -> f x = f y
 > test x y xRely = xRely
->>>>>>> da2e29997851fe3103fe7cdcea2d714086445ec7
 
  SQ.normalizeMapsRelatedToEQ x y xRely = xRely
 
