@@ -1,16 +1,16 @@
 > module ZeroQuotient
 
-> import KernelIdempotentQuotient
+> import SplitQuotient
 
-> KernelIdempotentQuotient.Base = Nat
-> KernelIdempotentQuotient.normalize x = 0
-> KernelIdempotentQuotient.normalizeIdem x = Refl
+> SplitQuotient.Base = Nat
+> SplitQuotient.normalize x = 0
+> SplitQuotient.Relation x y = ()
+> SplitQuotient.normalizeIsRelated x = ()
+> SplitQuotient.normalizeMapsRelatedToEQ x y xRely = Refl
 
 
 > MyUnit : Type 
-> MyUnit = SQuot
-
-testnum
+> MyUnit = SplitQuotient.Quot
 
 > poly : MyUnit -> MyUnit
 > poly x = 2 * x + 7
