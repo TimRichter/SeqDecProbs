@@ -1,4 +1,4 @@
-> module KernelIdempotentQuotient
+> module KernelQuotient
 
 > import Syntax.PreorderReasoning
 > import EqualityProperties
@@ -24,36 +24,36 @@ identified with the quotient of A by that equivalence.
 module parameters
 
 > Base : Type
-> normalize : KernelIdempotentQuotient.Base -> 
->             KernelIdempotentQuotient.Base
-> normalizeIdem : Idempotent KernelIdempotentQuotient.normalize
+> normalize : KernelQuotient.Base -> 
+>             KernelQuotient.Base
+> normalizeIdem : Idempotent KernelQuotient.normalize
 
 ----------------------------------------------------------
 
 > ||| Define the quotient type as elements of Base
 > ||| that are fixed by |normalize|
 > |||
-> data SQuot : Type where
->   Class : (x : Base) -> normalize x = x -> SQuot
+> data Quot : Type where
+>   Class : (x : Base) -> normalize x = x -> Quot
 
 
 > ||| Any class has a canonical representant
 > |||
-> repr : SQuot -> Base
+> repr : Quot -> Base
 > repr (Class x _) = x
 
 
 > ||| which is a fixpoint of |normalize|.
 > |||
-> reprNormal :  (cl : SQuot) ->
+> reprNormal :  (cl : Quot) ->
 >               normalize (repr cl) = repr cl
 > reprNormal (Class _ nxIsx) = nxIsx
 
 
-> ||| Since Idris has UIP, two elements |cl1, cl2 : SQuot|
+> ||| Since Idris has UIP, two elements |cl1, cl2 : Quot|
 > ||| are equal if their representants are equal.
 > |||
-> classesEqIfReprEq : (cl1, cl2 : SQuot) ->
+> classesEqIfReprEq : (cl1, cl2 : Quot) ->
 >                     repr cl1 = repr cl2 ->
 >                     cl1 = cl2
 > classesEqIfReprEq (Class q nqIsq) (Class q nqIsq') Refl =
@@ -61,10 +61,10 @@ module parameters
 
 
 > ||| Since |normalize| is idempotent, there is a canonical
-> ||| map |Base -> SQuot|, assigning to |x : Base| its
+> ||| map |Base -> Quot|, assigning to |x : Base| its
 > ||| equivalence class, represented by |normalize x|.
 > |||
-> classOf : Base -> SQuot
+> classOf : Base -> Quot
 > classOf x = Class (normalize x) (normalizeIdem x)
 >
 > syntax "[" [x] "]" = classOf x
@@ -102,7 +102,7 @@ module parameters
 > ||| The class of the canonical representant of any 
 > ||| given class is that class itself.
 > |||
-> classOfAfterReprIsId :  (cl : SQuot) ->
+> classOfAfterReprIsId :  (cl : Quot) ->
 >                         [repr cl] = cl
 >
 > classOfAfterReprIsId cl =
@@ -118,22 +118,22 @@ module parameters
 
 
 > ||| Any function |Base -> B| can be lifted to a function
-> ||| |SQuot -> B|.
+> ||| |Quot -> B|.
 > |||
 > lift :  {B : Type} ->
 >         (f : Base -> B) ->
->         SQuot -> B
+>         Quot -> B
 >
 > lift f (Class x _) = f x
 
 
 > ||| If |f: Base -> B| is invariant under the |ker normalize|
 > ||| relation, |lift f| is a lift of |f| along the canonical map
-> ||| |classOf: Base -> SQuot|, i.e. |(lift f) . classOf|
+> ||| |classOf: Base -> Quot|, i.e. |(lift f) . classOf|
 > ||| is (pointwise) equal to |f|, i.e. this diagram commutes:
 > |||
 > |||              lift f
-> |||        SQuot ------> B
+> |||         Quot ------> B
 > |||            ^        ^
 > |||             \      /
 > |||         [_]  \    / f
@@ -156,11 +156,11 @@ module parameters
 
 
 > ||| Any binary function |Base -> Base -> B| can be lifted
-> ||| to a function |SQuot -> SQuot -> B|.
+> ||| to a function |Quot -> Quot -> B|.
 > |||
 > lift2 : {B : Type} ->
 >         (f : Base -> Base -> B) ->
->         SQuot -> SQuot -> B
+>         Quot -> Quot -> B
 >
 > lift2 f (Class x _) (Class y _) = f x y
 
@@ -171,7 +171,7 @@ module parameters
 > ||| |f|, i.e. the following diagram commutes
 > |||
 > |||                 uncurry (lift f)
-> |||      SQuot x SQuot ----------> B
+> |||         Quot x Quot ----------> B
 > |||                  ^             ^
 > |||                   \           /
 > |||         [_] x [_]  \         / uncurry f
@@ -199,17 +199,17 @@ module parameters
 > ||| `op` to curry (classOf . (uncurry op)).
 > |||
 > classOfAfterOp :  (op : Base -> Base -> Base) ->
->                   (Base -> Base -> SQuot)
+>                   (Base -> Base -> Quot)
 >
 > classOfAfterOp op x y = [x `op` y]
 
 
 > ||| Important special case of |lift2| (in combination
 > ||| with |classOfAfterOp|): A binary operation on Base 
-> ||| lifts to a binary operation on SQuot.
+> ||| lifts to a binary operation on Quot.
 > |||
 > liftBinop : (op : Base -> Base -> Base) ->
->             (SQuot -> SQuot -> SQuot)
+>             (Quot -> Quot -> Quot)
 >
 > liftBinop op x y = lift2 (classOfAfterOp op) x y
 
@@ -219,7 +219,7 @@ module parameters
 > ||| uncurrying of) |op| in the sense that this diagram commutes:
 > |||
 > |||                 uncurry (liftBinop op)
-> |||       SQuot x SQuot -----------------> SQuot
+> |||        Quot x Quot ------------------> Quot
 > |||             ^                           ^
 > |||   [_] x [_] |                           | [_]
 > |||             |                           |
@@ -239,31 +239,31 @@ module parameters
 >                 (liftBinop op) [x] [y] = [x `op` y]
 >
 > liftBinopComp op opInv x y =
->   lift2Comp {B=SQuot} (classOfAfterOp op) opInv x y
+>   lift2Comp {B=Quot} (classOfAfterOp op) opInv x y
 
 ----------------------------
 Type classes
 ----------------------------
 
-> instance Num Base => Num SQuot where
->   (+) = liftBinop (+)
->   (*) = liftBinop (*)
->   fromInteger = classOf . fromInteger
->   -- abs = classOf . (lift abs)
+ instance Num Base => Num Quot where
+   (+) = liftBinop (+)
+   (*) = liftBinop (*)
+   fromInteger = classOf . fromInteger
+   -- abs = classOf . (lift abs)
 
-> instance Show Base => Show SQuot where
->   show (Class x _) = "[" ++ show x ++ "]"
+ instance Show Base => Show Quot where
+   show (Class x _) = "[" ++ show x ++ "]"
 
-> instance DecEq Base => DecEq SQuot where
->   decEq (Class x nxIsx) (Class y nyIsy)
->     with (decEq (normalize x) (normalize y))
->     | (Yes p) = Yes (classesEqIfReprEq  (Class x nxIsx)
->                                         (Class y nyIsy)
->                                         xIsy) where
->         xIsy =
->           (x)             ={ sym nxIsx }=
->           (normalize x)   ={ p }=
->           (normalize y)   ={ nyIsy }=
->           (y)             QED
->     | (No contra) = No (contra . (cong {f = normalize . repr}))
+ instance DecEq Base => DecEq Quot where
+   decEq (Class x nxIsx) (Class y nyIsy)
+     with (decEq (normalize x) (normalize y))
+     | (Yes p) = Yes (classesEqIfReprEq  (Class x nxIsx)
+                                         (Class y nyIsy)
+                                         xIsy) where
+         xIsy =
+           (x)             ={ sym nxIsx }=
+           (normalize x)   ={ p }=
+           (normalize y)   ={ nyIsy }=
+           (y)             QED
+     | (No contra) = No (contra . (cong {f = normalize . repr}))
 
