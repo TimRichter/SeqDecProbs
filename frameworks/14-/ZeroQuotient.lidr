@@ -1,5 +1,6 @@
 > module ZeroQuotient
 
+> import KernelQuotient
 > import SplitQuotient
 
 > SplitQuotient.Base = Nat

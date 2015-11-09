@@ -23,37 +23,37 @@ identified with the quotient of A by that equivalence.
 ----------------------------------------------------------
 module parameters
 
-> Base : Type
-> normalize : KernelQuotient.Base -> 
->             KernelQuotient.Base
+> KBase : Type
+> normalize : KernelQuotient.KBase -> 
+>             KernelQuotient.KBase
 > normalizeIdem : Idempotent KernelQuotient.normalize
 
 ----------------------------------------------------------
 
-> ||| Define the quotient type as elements of Base
+> ||| Define the quotient type as elements of KBase
 > ||| that are fixed by |normalize|
 > |||
-> data Quot : Type where
->   Class : (x : Base) -> normalize x = x -> Quot
+> data KQuot : Type where
+>   Class : (x : KBase) -> normalize x = x -> KQuot
 
 
 > ||| Any class has a canonical representant
 > |||
-> repr : Quot -> Base
+> repr : KQuot -> KBase
 > repr (Class x _) = x
 
 
 > ||| which is a fixpoint of |normalize|.
 > |||
-> reprNormal :  (cl : Quot) ->
+> reprNormal :  (cl : KQuot) ->
 >               normalize (repr cl) = repr cl
 > reprNormal (Class _ nxIsx) = nxIsx
 
 
-> ||| Since Idris has UIP, two elements |cl1, cl2 : Quot|
+> ||| Since Idris has UIP, two elements |cl1, cl2 : KQuot|
 > ||| are equal if their representants are equal.
 > |||
-> classesEqIfReprEq : (cl1, cl2 : Quot) ->
+> classesEqIfReprEq : (cl1, cl2 : KQuot) ->
 >                     repr cl1 = repr cl2 ->
 >                     cl1 = cl2
 > classesEqIfReprEq (Class q nqIsq) (Class q nqIsq') Refl =
@@ -61,10 +61,10 @@ module parameters
 
 
 > ||| Since |normalize| is idempotent, there is a canonical
-> ||| map |Base -> Quot|, assigning to |x : Base| its
+> ||| map |KBase -> KQuot|, assigning to |x : KBase| its
 > ||| equivalence class, represented by |normalize x|.
 > |||
-> classOf : Base -> Quot
+> classOf : KBase -> KQuot
 > classOf x = Class (normalize x) (normalizeIdem x)
 >
 > syntax "[" [x] "]" = classOf x
@@ -72,7 +72,7 @@ module parameters
 
 > ||| The representant of |[x]| is |normalize x|.
 > |||
-> reprAfterClassOfIsNormalize :   (x : Base) ->
+> reprAfterClassOfIsNormalize :   (x : KBase) ->
 >                                 repr [x] = normalize x
 > reprAfterClassOfIsNormalize x = Refl
 
@@ -81,7 +81,7 @@ module parameters
 > ||| |normalize x = normalize y| (, i.e. |x| and |y|
 > ||| are in the |ker normalize| relation, are equal.
 > |||
-> classOfEqIfNormalizeEq :  (x, y : Base) ->
+> classOfEqIfNormalizeEq :  (x, y : KBase) ->
 >                           (normalize x = normalize y) ->
 >                           [x] = [y]
 >
@@ -102,7 +102,7 @@ module parameters
 > ||| The class of the canonical representant of any 
 > ||| given class is that class itself.
 > |||
-> classOfAfterReprIsId :  (cl : Quot) ->
+> classOfAfterReprIsId :  (cl : KQuot) ->
 >                         [repr cl] = cl
 >
 > classOfAfterReprIsId cl =
@@ -117,77 +117,77 @@ module parameters
 >         QED
 
 
-> ||| Any function |Base -> B| can be lifted to a function
-> ||| |Quot -> B|.
+> ||| Any function |KBase -> B| can be lifted to a function
+> ||| |KQuot -> B|.
 > |||
 > lift :  {B : Type} ->
->         (f : Base -> B) ->
->         Quot -> B
+>         (f : KBase -> B) ->
+>         KQuot -> B
 >
 > lift f (Class x _) = f x
 
 
-> ||| If |f: Base -> B| is invariant under the |ker normalize|
+> ||| If |f: KBase -> B| is invariant under the |ker normalize|
 > ||| relation, |lift f| is a lift of |f| along the canonical map
-> ||| |classOf: Base -> Quot|, i.e. |(lift f) . classOf|
+> ||| |classOf: KBase -> KQuot|, i.e. |(lift f) . classOf|
 > ||| is (pointwise) equal to |f|, i.e. this diagram commutes:
 > |||
 > |||              lift f
-> |||         Quot ------> B
+> |||        KQuot ------> B
 > |||            ^        ^
 > |||             \      /
 > |||         [_]  \    / f
 > |||               \  /
-> |||               Base
+> |||               KBase
 > ||| 
 > ||| This can be seen as a "computation rule" for |lift f|:
 > ||| |(lift f) [x] = f x|.
 > ||| 
 > liftComp: {B : Type} ->
->           (f : Base -> B) ->
->           ( (x, y : Base) ->
+>           (f : KBase -> B) ->
+>           ( (x, y : KBase) ->
 >             (normalize x = normalize y) ->
 >             f x = f y
 >           ) ->
->           (x : Base) ->
+>           (x : KBase) ->
 >           (lift f) [x] = f x
 >
 > liftComp f fInv x = fInv (normalize x) x (normalizeIdem x)
 
 
-> ||| Any binary function |Base -> Base -> B| can be lifted
-> ||| to a function |Quot -> Quot -> B|.
+> ||| Any binary function |KBase -> KBase -> B| can be lifted
+> ||| to a function |KQuot -> KQuot -> B|.
 > |||
 > lift2 : {B : Type} ->
->         (f : Base -> Base -> B) ->
->         Quot -> Quot -> B
+>         (f : KBase -> KBase -> B) ->
+>         KQuot -> KQuot -> B
 >
 > lift2 f (Class x _) (Class y _) = f x y
 
 
-> ||| If |f: Base -> Base -> B| is invariant under the
+> ||| If |f: KBase -> KBase -> B| is invariant under the
 > ||| |ker normalize| relation in each argument, |lift2 f|
 > ||| is (the currying of) a lift of (the uncurrying of)
 > ||| |f|, i.e. the following diagram commutes
 > |||
 > |||                 uncurry (lift f)
-> |||         Quot x Quot ----------> B
+> |||       KQuot x KQuot ----------> B
 > |||                  ^             ^
 > |||                   \           /
 > |||         [_] x [_]  \         / uncurry f
 > |||                     \       /
-> |||                    Base x Base
+> |||                    KBase x KBase
 > |||
 > ||| This can be seen as a "computation rule" for
 > ||| |lift2 f|: |(lift f) [x] [y] = f x y|.
 > ||| 
 > lift2Comp:  {B : Type} ->
->             (f : Base -> Base -> B) ->
->             ( (x, x', y, y' : Base) ->
+>             (f : KBase -> KBase -> B) ->
+>             ( (x, x', y, y' : KBase) ->
 >               (normalize x  = normalize y ) ->
 >               (normalize x' = normalize y') ->
 >               f x x' = f y y') ->
->             (x, y : Base) ->
+>             (x, y : KBase) ->
 >             (lift2 f) [x] [y] = f x y
 >
 > lift2Comp f fInv x y =
@@ -198,18 +198,18 @@ module parameters
 > ||| Helper for liftBinop and liftBinopLemma, mapping
 > ||| `op` to curry (classOf . (uncurry op)).
 > |||
-> classOfAfterOp :  (op : Base -> Base -> Base) ->
->                   (Base -> Base -> Quot)
+> classOfAfterOp :  (op : KBase -> KBase -> KBase) ->
+>                   (KBase -> KBase -> KQuot)
 >
 > classOfAfterOp op x y = [x `op` y]
 
 
 > ||| Important special case of |lift2| (in combination
-> ||| with |classOfAfterOp|): A binary operation on Base 
-> ||| lifts to a binary operation on Quot.
+> ||| with |classOfAfterOp|): A binary operation on KBase 
+> ||| lifts to a binary operation on KQuot.
 > |||
-> liftBinop : (op : Base -> Base -> Base) ->
->             (Quot -> Quot -> Quot)
+> liftBinop : (op : KBase -> KBase -> KBase) ->
+>             (KQuot -> KQuot -> KQuot)
 >
 > liftBinop op x y = lift2 (classOfAfterOp op) x y
 
@@ -219,51 +219,51 @@ module parameters
 > ||| uncurrying of) |op| in the sense that this diagram commutes:
 > |||
 > |||                 uncurry (liftBinop op)
-> |||        Quot x Quot ------------------> Quot
+> |||       KQuot x KQuot ------------------> KQuot
 > |||             ^                           ^
 > |||   [_] x [_] |                           | [_]
 > |||             |                           |
-> |||        Base x Base ------------------> Base
+> |||        KBase x KBase ------------------> KBase
 > |||                       uncurry op
 > ||| 
 > ||| This can be seen as a "computation rule" for
 > ||| |liftBinop op|: |(liftBinop op) [x] [y] = [x `op` y]|.
 > |||
-> liftBinopComp:  (op : Base -> Base -> Base) ->
->                 ( (x, x', y, y' : Base) ->
+> liftBinopComp:  (op : KBase -> KBase -> KBase) ->
+>                 ( (x, x', y, y' : KBase) ->
 >                   (normalize x = normalize y) ->
 >                   (normalize x' = normalize y') ->
 >                   [x `op` x'] = [y `op` y']
 >                 ) ->
->                 (x, y : Base) ->
+>                 (x, y : KBase) ->
 >                 (liftBinop op) [x] [y] = [x `op` y]
 >
 > liftBinopComp op opInv x y =
->   lift2Comp {B=Quot} (classOfAfterOp op) opInv x y
+>   lift2Comp {B=KQuot} (classOfAfterOp op) opInv x y
 
 ----------------------------
 Type classes
 ----------------------------
 
- instance Num Base => Num Quot where
-   (+) = liftBinop (+)
-   (*) = liftBinop (*)
-   fromInteger = classOf . fromInteger
-   -- abs = classOf . (lift abs)
-
- instance Show Base => Show Quot where
-   show (Class x _) = "[" ++ show x ++ "]"
-
- instance DecEq Base => DecEq Quot where
-   decEq (Class x nxIsx) (Class y nyIsy)
-     with (decEq (normalize x) (normalize y))
-     | (Yes p) = Yes (classesEqIfReprEq  (Class x nxIsx)
-                                         (Class y nyIsy)
-                                         xIsy) where
-         xIsy =
-           (x)             ={ sym nxIsx }=
-           (normalize x)   ={ p }=
-           (normalize y)   ={ nyIsy }=
-           (y)             QED
-     | (No contra) = No (contra . (cong {f = normalize . repr}))
+> instance Num KBase => Num KQuot where
+>   (+) = liftBinop (+)
+>   (*) = liftBinop (*)
+>   fromInteger = classOf . fromInteger
+>   -- abs = classOf . (lift abs)
+>
+> instance Show KBase => Show KQuot where
+>   show (Class x _) = "[" ++ show x ++ "]"
+>
+> instance DecEq KBase => DecEq KQuot where
+>   decEq (Class x nxIsx) (Class y nyIsy)
+>     with (decEq (normalize x) (normalize y))
+>     | (Yes p) = Yes (classesEqIfReprEq  (Class x nxIsx)
+>                                         (Class y nyIsy)
+>                                         xIsy) where
+>         xIsy =
+>           (x)             ={ sym nxIsx }=
+>           (normalize x)   ={ p }=
+>           (normalize y)   ={ nyIsy }=
+>           (y)             QED
+>     | (No contra) = No (contra . (cong {f = normalize . repr}))
 

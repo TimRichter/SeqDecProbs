@@ -45,7 +45,7 @@ module parameters
 
 --------------------------------------------------------------
 
-> KQ.Base = SplitQuotient.Base
+> KQ.KBase = SplitQuotient.Base
 > KQ.normalize = SplitQuotient.normalize
 > KQ.normalizeIdem x = 
 >   normalizeMapsRelatedToEQ 
@@ -54,7 +54,7 @@ module parameters
 >       (normalizeIsRelated x)
 
 > Quot : Type
-> Quot = KQ.Quot
+> Quot = KQ.KQuot
 
 > ||| The classes of related elements are equal
 > |||
@@ -189,25 +189,25 @@ module parameters
 Type classes
 ----------------------------
 
-> instance Num SplitQuotient.Base => Num SplitQuotient.Quot where
->   (+) = liftBinop (+)
->   (*) = liftBinop (*)
->   fromInteger = classOf . fromInteger
->   -- abs = classOf . (lift abs)
+ instance Num SplitQuotient.Base => Num SplitQuotient.Quot where
+   (+) = liftBinop (+)
+   (*) = liftBinop (*)
+   fromInteger = classOf . fromInteger
+   -- abs = classOf . (lift abs)
 
-> instance Show SplitQuotient.Base => Show SplitQuotient.Quot where
->   show (Class x _) = "[" ++ show x ++ "]"
+ instance Show SplitQuotient.Base => Show SplitQuotient.Quot where
+   show (Class x _) = "[" ++ show x ++ "]"
 
-> instance DecEq SplitQuotient.Base => DecEq SplitQuotient.Quot where
->   decEq (Class x nxIsx) (Class y nyIsy)
->     with (decEq (SplitQuotient.normalize x) (SplitQuotient.normalize y))
->     | (Yes p) = Yes (classesEqIfReprEq  (Class x nxIsx)
->                                         (Class y nyIsy)
->                                         xIsy) where
->         xIsy =
->           (x)             ={ sym nxIsx }=
->           (SplitQuotient.normalize x)   ={ p }=
->           (SplitQuotient.normalize y)   ={ nyIsy }=
->           (y)             QED
->     | (No contra) = No (contra . (cong {f = SplitQuotient.normalize . repr}))
+ instance DecEq SplitQuotient.Base => DecEq SplitQuotient.Quot where
+   decEq (Class x nxIsx) (Class y nyIsy)
+     with (decEq (SplitQuotient.normalize x) (SplitQuotient.normalize y))
+     | (Yes p) = Yes (classesEqIfReprEq  (Class x nxIsx)
+                                         (Class y nyIsy)
+                                         xIsy) where
+         xIsy =
+           (x)             ={ sym nxIsx }=
+           (SplitQuotient.normalize x)   ={ p }=
+           (SplitQuotient.normalize y)   ={ nyIsy }=
+           (y)             QED
+     | (No contra) = No (contra . (cong {f = SplitQuotient.normalize . repr}))
 
