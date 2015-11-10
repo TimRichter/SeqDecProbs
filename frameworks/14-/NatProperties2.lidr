@@ -15,6 +15,13 @@
 
 > %default total
 
+> shiftSucc : (a, b : Nat) -> (a + S b = S a + b)
+> shiftSucc Z b = Refl
+> shiftSucc (S a) b =
+>   (S a + S b)    ={ Refl }=
+>   (S (a + S b))  ={ cong {f = S} (shiftSucc a b) }=
+>   (S (S a + b))  ={ Refl }=
+>   (S (S a) + b)  QED
 
 > LTE' : Nat -> Nat -> Type
 > LTE' m n = ( l : Nat ** m + l = n )
@@ -48,6 +55,32 @@
 >   m'LTEn' : m' `LTE` n'
 >   m'LTEn' = lte'Tolte m' n' ( l ** m'PlEQn')
 
+
+> lteLemma1' : (m, n : Nat) -> (S m) `LTE` n -> m `LTE` n
+> lteLemma1' m n smLTEn with (lteTolte' (S m) n smLTEn)
+>   | (l ** smPlEQn) = lte'Tolte m n ( (S l) ** mPslEQn ) where
+>     mPslEQn : m + (S l) = n
+>     mPslEQn = trans (shiftSucc m l) smPlEQn
+
+> eqInLTE' : (m, n : Nat) -> m = n -> m `LTE` n
+> eqInLTE' m n mEQn = lte'Tolte m n (0 ** mP0EQn) where
+>   mP0EQn : m + 0 = n
+>   mP0EQn = trans (plusZeroRightNeutral m) mEQn
+
+> strengthenLT' : (m, n : Nat) -> LT m (S n) -> Not (m = n) -> LT m n
+> strengthenLT' m n smLTEsn notmEQn with (lteTolte' (S m) (S n) smLTEsn)
+>   | (Z ** smP0EQsn) = absurd (notmEQn mEQn) where
+>     mEQn : m = n
+>     mEQn = trans (sym (plusZeroRightNeutral m)) (succInjective (m + 0) n smP0EQsn)
+>   | (S l ** smPslEQsn) = lte'Tolte (S m) n (l ** smPlEQn) where
+>     smPlEQn : (S m) + l = n
+>     smPlEQn = trans (sym (shiftSucc m l)) 
+>                     (succInjective (m + (S l)) n smPslEQsn)
+
+> myMinusLemma0 : (a, b: Nat) ->
+>                 (a `LTE` b) ->
+>                 (a + (b - a) = b)
+> myMinusLemma0 Z Z LTEZero
 
  lteIsoLte' : (m, n : Nat) ->
              Iso (LTE m n) (LTE' m n)

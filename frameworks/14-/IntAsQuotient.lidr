@@ -4,6 +4,7 @@
 > import SplitQuotient as SQ
 > import NatOperations
 > import NatProperties
+> import NatProperties2
 > import Syntax.PreorderReasoning
 
 > %default total
@@ -22,13 +23,6 @@
 >           | (Yes pf)  = (x - y, 0)
 >           | (No  pf1) = (0, y - x)
 
-> shiftSucc : (a, b : Nat) -> (a + S b = S a + b)
-> shiftSucc Z b = Refl
-> shiftSucc (S a) b =
->   (S a + S b)    ={ Refl }=
->   (S (a + S b))  ={ cong {f = S} (shiftSucc a b) }=
->   (S (S a + b))  ={ Refl }=
->   (S (S a) + b)  QED
 
 
 besser so?:
