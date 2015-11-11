@@ -1,10 +1,12 @@
 > module NonNegRational2
 
-> import NatPredicates
+ import NatPredicates
+
+> import NatDivisor
+> import NatGCD
 > import NatOperations
 > import NatProperties
 > import Syntax.PreorderReasoning
-> import GCD
 > import SplitQuotient
 > import KernelQuotient
 
@@ -332,7 +334,7 @@ lemmata
 > notZIsS Z     pf = absurd (pf Refl)
 > notZIsS (S p) _  = ( p ** Refl)
 
-> syntax [d] "|" [m] = Divisor d m
+> syntax [d] "|" [m] = NatDivisor.Divisor d m
 
 > syntax [m] "/" [dDm] "/" [d] = quotient m d dDm
 
