@@ -6,6 +6,7 @@
 > import Syntax.PreorderReasoning
 > import GCD
 > import SplitQuotient
+> import KernelQuotient
 
 > %default total
 
@@ -59,9 +60,9 @@ Operations and Num instance
 
 > instance Num Fraction where
 >   (+) = plusFraction
->   (-) = minusFraction
+>   --(-) = minusFraction
 >   (*) = multFraction
->   abs = id
+>   --abs = id
 >   fromInteger = fromIntegerFraction
 
 Properties of *^
@@ -82,6 +83,8 @@ Properties of *^
 >   pf = multOneRightNeutral (S d)
 
 Properties of Fraction operations
+
+first those that prove equalities:
 
 > plusFCommutative : (x : Fraction) -> (y : Fraction) -> (x + y) = (y + x)
 > plusFCommutative (n,d) (m,e) = 
@@ -201,7 +204,7 @@ to append to properties, we call this Relation FR
 
 
 for transitivity we need that multiplication by a positive number is
-injective. This should be provable as (cong { f = divBy... } SdnIsSdm) or 
+injective. This should be provable as (cong { f = quotient... } SdnIsSdm) or 
 something like that
 
 > multNonZeroLeftInjective : (n, m, d : Nat) -> (S d) * n = (S d) * m -> n = m
@@ -331,7 +334,7 @@ lemmata
 
 > syntax [d] "|" [m] = Divisor d m
 
-> syntax [m] "/" [dDm] "/" [d] = divBy d m dDm
+> syntax [m] "/" [dDm] "/" [d] = quotient m d dDm
 
 
 a divisor of (S n) is an S _ 
@@ -351,8 +354,9 @@ a divisor of (S n) is an S _
 >     qnIsSm : q * n = S m
 >     qnIsSm = trans (multCommutative q n) nqIsSm
 
+
 > gcdPosPos : (g, m, n : Nat) -> GCD g m (S n) -> (p : Nat ** g = S p)
-> gcdPosPos g m n (mkGCD _ gDivSn _) = divPosPos g n gDivSn
+> gcdPosPos g m n (MkGCD _ gDivSn _) = divPosPos g n gDivSn
 
 
 > toLowest : Fraction -> Fraction

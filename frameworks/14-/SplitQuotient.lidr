@@ -3,26 +3,32 @@
 > import Syntax.PreorderReasoning
 > import KernelQuotient as KQ
 
-Consider a type Base and a binary relation ~ on Base:
+Consider a type |Base| and a binary relation |~| on Base:
 
- (~) : Base -> Base -> Type
+ |(~) : Base -> Base -> Type|
 
 We want to build a type that can be considered the
-quotient of Base by the smallest equivalence relation
-that contains ~.
+quotient of |Base| by the smallest equivalence relation
+that contains |~|.
 
 If we have a function |normalize: Base -> Base| 
 picking a representative
 
-that maps any x to an
-element related to x, i.e.
+that maps any |x| to an element related to |x|, i.e.
 
- normalize x ~ x for any x
+ |(x : Base) -> normalize x ~ x|
 
 and maps any two related elements to the same, i.e.
 
- x ~ y -> normalize x = normalize y 
+ |(x, y : Base) -> x ~ y -> normalize x = normalize y|
 
+it follows that 
+
+ |normalize| is idempotent and
+
+ |ker normalize| is (the propositional truncation of)
+ the smallest equivalence relation containing |~|, so
+ the construction in KernelQuotient fits the bill.
 
 ----------------------------------------------------------
 module parameters
