@@ -1,7 +1,5 @@
 > module Fraction2
 
- import NatPredicates
-
 > import NatDivisor
 > import NatGCD
 > import NatOperations
@@ -12,9 +10,9 @@
 
 > %default total
 
-
-positive natural numbers
-------------------------
+----------------------------------------------------------------------
+Positive natural numbers
+----------------------------------------------------------------------
 
 > ||| Define Positivity (any other suitable (unique !) 
 > ||| predicate would do)
@@ -36,7 +34,6 @@ positive natural numbers
 > multPosPosIsPos m Z _       SuccPos impossible
 > multPosPosIsPos (S n) (S m) _ _ = SuccPos
 
-
 > ||| Define positive natural numbers as the subset
 > ||| of those natural numbers that are, surprise ... positive!
 > |||
@@ -55,6 +52,18 @@ the first projection gets a short name
 > eqFromNatEq : (m, n : PosNat) -> (nat m = nat n) -> m = n
 > eqFromNatEq m n nmEQnn = 
 >   subsetEqLemma1 {A = Nat} {P = Positive} m n nmEQnn positiveUnique
+
+> ||| to make the proofs below independent of the particular
+> ||| implementation of PosNat, we give a name to (Element 1 SuccPos):
+> ||| (fromInteger: Nat -> PosNat of course can't be defined reasonably) 
+> |||
+> OnePosNat : PosNat
+> OnePosNat = (Element 1 SuccPos)
+
+> ||| the witness of OnePosNat is 1:
+>
+> onePosNatOne : nat OnePosNat = 1
+> onePosNatOne = Refl
 
 > infixl 5 *^
 
@@ -98,25 +107,27 @@ the first projection gets a short name
 >        (nat ((d *^ e) *^ f))     QED
 
 > ||| 1 is right neutral for mult on PosNat
-> multUpOneRightNeutral : (d : PosNat) -> d *^ (Element 1 SuccPos) = d
+> multUpOneRightNeutral : (d : PosNat) -> d *^ OnePosNat = d
 > multUpOneRightNeutral d =
->   eqFromNatEq (d *^ (Element 1 SuccPos)) d pf where
->     pf : nat (d *^ (Element 1 SuccPos)) = nat d
+>   eqFromNatEq (d *^ OnePosNat) d pf where
+>     pf : nat (d *^ OnePosNat) = nat d
 >     pf = 
->       (nat (d *^ (Element 1 SuccPos))) ={ multUpIsMult d (Element 1 SuccPos) }=
->       (nat d * 1)                      ={ multOneRightNeutral (nat d)        }=
->       (nat d)                          QED
+>       (nat (d *^ OnePosNat))      ={ multUpIsMult d OnePosNat                }=
+>       (nat d * nat OnePosNat)     ={ cong {f = \x => nat d * x} onePosNatOne }=
+>       (nat d * 1)                 ={ multOneRightNeutral (nat d)             }=
+>       (nat d)                     QED
 
------------------------------------------------------------
+---------------------------------------------------------------------------------
 Fractions
------------------------------------------------------------
+---------------------------------------------------------------------------------
 
-> ||| Define Fractions as a Pairs of a Nat and a PosNat
+> ||| Define Fractions as Pairs of a Nat and a PosNat
 > |||
 > Fraction : Type
 > Fraction = (Nat,PosNat)
 
 Operations and Num instance
+---------------------------
 
 > plusFraction : Fraction -> Fraction -> Fraction
 > plusFraction (n, d) (m, e) =
@@ -130,7 +141,7 @@ Operations and Num instance
 > multFraction (n, d) (m, e) = (n * m, d *^ e)
 
 > fromIntegerFraction : Integer -> Fraction
-> fromIntegerFraction i = (fromInteger i, Element 1 SuccPos)
+> fromIntegerFraction i = (fromInteger i, OnePosNat)
 
 > instance Num Fraction where
 >   (+) = plusFraction
@@ -139,10 +150,11 @@ Operations and Num instance
 >   --abs = id
 >   fromInteger = fromIntegerFraction
 
-Properties of Fraction operations
+Properties of Fraction operations 1 : those that prove equalities
+-----------------------------------------------------------------
 
-first those that prove equalities
-
+> ||| plus on Fractions is commutative
+> |||
 > plusFCommutative : (x : Fraction) -> (y : Fraction) -> (x + y) = (y + x)
 > plusFCommutative (n,d) (m,e) = 
 >     ((n, d) + (m, e))
@@ -154,6 +166,8 @@ first those that prove equalities
 >     ((m, e) + (n, d))
 >       QED
 
+> ||| mult on Fractions is commutative
+> |||
 > multFCommutative : (x : Fraction) -> (y : Fraction) -> (x * y) = (y * x)
 > multFCommutative (n,d) (m,e) =
 >     ((n,d) * (m,e))
@@ -163,6 +177,8 @@ first those that prove equalities
 >     ((m, e) * (n, d))
 >       QED
 
+> ||| zero is right neutral for plus on Fractions
+> |||
 > plusFZeroRightNeutral : (x : Fraction) -> x + (fromInteger 0) = x
 > plusFZeroRightNeutral (n, d) = pf where
 >   numEq : n * 1 + 0 * (nat d) = n
@@ -177,17 +193,22 @@ first those that prove equalities
 >       QED
 >
 >   pf =
->     ((n, d) + (0, (Element 1 SuccPos)))               
->       ={ cong {f = \m => (m, d *^ (Element 1 SuccPos))} numEq }=
->     (n, d *^ (Element 1 SuccPos))                     
+>     ((n, d) + (0, OnePosNat))               
+>       ={ cong {f = \m => (m, d *^ OnePosNat)} numEq }=
+>     (n, d *^ OnePosNat)                     
 >       ={ cong {f = \m => (n, m)} (multUpOneRightNeutral d) }=
 >     (n, d)  
 >       QED
 
+
+> ||| zero is left neutral for plus on Fractions
+> |||
 > plusFZeroLeftNeutral : (x : Fraction) -> (fromInteger 0) + x = x
 > plusFZeroLeftNeutral x = trans  (plusFCommutative (fromInteger 0) x) 
 >                             (plusFZeroRightNeutral x)
 
+> ||| plus on Fractions is associative
+> |||
 > plusFAssociative : (x, y, z : Fraction) -> x + (y + z) = (x + y) + z
 > plusFAssociative (n,d) (m,e) (l,f) = pf where
 >   multComm' : (a, b, c : Nat) -> a * b * c = a * (c * b)
@@ -237,27 +258,34 @@ first those that prove equalities
 >     (((n,d) + (m,e)) + (l,f))
 >       QED
 
+> ||| 1 is right neutral for multiplication of Fractions
+> |||
 > multFOneRightNeutral : (x : Fraction) -> x * 1 = x
 > multFOneRightNeutral (n,d) =
->   ((n,d) * (1, (Element 1 SuccPos)))
+>   ((n,d) * (1, OnePosNat))
 >     ={ cong {f = \k => (n * 1, k)} (multUpOneRightNeutral d) }= 
 >   (n * 1, d)
 >     ={ cong {f = \k => (k, d)} (multOneRightNeutral n) }=
 >   (n, d)
 >     QED
 
+> ||| 1 is left neutral for multiplication of Fractions
+>
 > multFOneLeftNeutral : (x : Fraction) -> 1 * x = x
 > multFOneLeftNeutral x = trans (multFCommutative 1 x) (multFOneRightNeutral x)
 
-Rational numbers will be a quotient of Fractions by the equivalence 
-relation
+
+Interlude: An equivalence relation
+----------------------------------
+
+Rational numbers will be a quotient of Fractions by the relation
 
 > FR : Fraction -> Fraction -> Type
 > FR (n,d) (m,e) = n * (nat e) = m * (nat d)
 
 > syntax  [x] "~" [y] = FR x y
 
-which is an equivalence
+which is an equivalence relation
 
 > reflexiveFR : (x : Fraction) -> x ~ x
 > reflexiveFR (n,d) = Refl
@@ -300,11 +328,11 @@ NatProperties.multMultElimLeft)
 >     (nat e * (l * (nat d)))
 >     QED
 
-here are properties that on Fraction level only hold
-up to "~"
+Properties of Fraction operations 2: those that only prove equivalences w.r.t. ~
+--------------------------------------------------------------------------------
 
-> ||| multiplying any fraction with 0 on the right gives a 
-> ||| fraction equivalent to 0
+> ||| Multiplying any Fraction with 0 on the right gives a 
+> ||| Fraction equivalent to 0
 > |||
 > multFZeroRightZero : (x : Fraction) -> (x * 0) ~ 0
 > multFZeroRightZero (n,d) =
@@ -313,12 +341,12 @@ up to "~"
 >     (0 * 1)
 >     ={ multZeroLeftZero 1 }=
 >     0
->     ={ sym (multZeroLeftZero (nat (d *^ (Element 1 SuccPos)))) }=
->     (0 * nat (d *^ (Element 1 SuccPos)))
+>     ={ sym (multZeroLeftZero (nat (d *^ OnePosNat))) }=
+>     (0 * nat (d *^ OnePosNat))
 >     QED
 
-> ||| multiplying any fraction with 0 on the left gives a 
-> ||| fraction equivalent to 0
+> ||| Multiplying any Fraction with 0 on the left gives a 
+> ||| Fraction equivalent to 0
 > |||
 > multFZeroLeftZero : (x : Fraction) -> (0 * x) ~ 0
 > multFZeroLeftZero x = 
@@ -326,7 +354,7 @@ up to "~"
 >     pf : (0 * x) ~ (x * 0)
 >     pf = reflexiveFR' (0 * x) (x * 0) (multFCommutative 0 x)
 
-> ||| Distributivity (+ on the right) up to equivalence
+> ||| Distributivity (+ on the right) for Fractions up to equivalence
 > |||
 > multFDistributesOverPlusRight : (x,y,z : Fraction) -> 
 >                                 (x * (y + z)) ~ ((x * y) + (x * z))
@@ -392,7 +420,7 @@ up to "~"
 >       QED
 
 
-> ||| Distributivity (+ on the left) up to equivalence
+> ||| Distributivity (+ on the left) for Fractions up to equivalence
 > |||
 > multFDistributesOverPlusLeft :  (x,y,z : Fraction) -> 
 >                                 ((x + y) * z) ~ ((x * z) + (y * z))
@@ -412,16 +440,4 @@ up to "~"
 >     (x * z + y * z)
 >     QED
    
-
-
-
-
-
-
-
-
-
-
-
-
 
