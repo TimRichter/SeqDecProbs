@@ -5,6 +5,7 @@
 
 > import NatPredicates
 > import NatOperations
+> import NatProperties
 > import Preorder
 > import TotalPreorder
 > import Basics
@@ -80,7 +81,11 @@
 > myMinusLemma0 : (a, b: Nat) ->
 >                 (a `LTE` b) ->
 >                 (a + (b - a) = b)
-> myMinusLemma0 Z Z LTEZero
+> myMinusLemma0 a b aLTEb = 
+>   (a + (b - a))  ={ plusCommutative a (b - a) }=
+>   ((b - a) + a)  ={ plusRightInverseMinus a b aLTEb }=
+>   b              QED
+
 
  lteIsoLte' : (m, n : Nat) ->
              Iso (LTE m n) (LTE' m n)

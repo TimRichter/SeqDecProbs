@@ -19,19 +19,7 @@
 
 > SQ.Base = NatPairs
 > SQ.Relation (x,y) (x',y') = x + y' = x' + y
-> SQ.normalize (x , y) with (decLTE y x)
->           | (Yes pf)  = (x - y, 0)
->           | (No  pf1) = (0, y - x)
-
-
-
-besser so?:
-
-  a, b, c
-   b <= a   -->
-   a = b + c  <->  a - b = c
-
-
+> SQ.normalize (x , y) = (x - y, y - x)
 
 > myMinusLemma1 : (a, b, c : Nat) ->
 >                 (c `LTE` a) ->
@@ -70,14 +58,11 @@ besser so?:
 >     (S b + c') ={ sym (shiftSucc b c')  }=
 >     (b + S c') QED
 
+> myMinusLemma3 : (a, b, c : Nat) -> b `LTE` a -> (a - b) + c = (a + c) - b
+> myMinusLemma3  Z     Z       Z     LTEZero = Refl
+> myMinusLemma3  Z     Z      (S c') LTEZero = Refl
+> myMinusLemma3 (S a') Z       Z     LTEZero = Refl
+> myMinusLemma3 (S a') Z      (S c') LTEZero = Refl
+> myMinusLemma3 (S a') (S b')  Z     _       = Refl  
 
-
- SQ.normalizeMapsRelatedToEQ (x, y) (x', y') xPy'EQx'Py with (decLTE y x)
-           | (Yes pf) with (decLTE y' x')
-             | (Yes pf') = cong {f = \ z => (z , 0)} xMyEQx'My' where
-                  xMyEQx'My' : x - y = x' - y'
-                  xMyEQx'My' =
-                   (x - y)    
-               
-
-
+> SQ.normalizeMapsRelatedToEQ (x, y) (x', y') xPy'EQx'Py 
