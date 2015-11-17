@@ -300,6 +300,9 @@ For transitivity we need that multiplication by a positive number is
 injective (should follow more or less immediately from 
 NatProperties.multMultElimLeft)
 
+
+see NatProperties.multMultElimLeft
+
 > multPositiveLeftInjective : (m, n : Nat) -> (d : PosNat) -> (nat d) * m = (nat d) * n -> m = n
 
 > transitiveFR : (x, y, z : Fraction) -> (x ~ y) -> (y ~ z) -> (x ~ z)
