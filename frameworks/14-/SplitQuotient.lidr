@@ -100,6 +100,19 @@ module parameters
 >     (f (normalize y))  ={ invNormalizeEq f fInv y       }=
 >     (f y)              QED
 
+not used, just for completeness
+
+> invNToInv : {B : Type} ->
+>             (f : SplitQuotient.Base -> B) ->
+>             ( (x, y : SplitQuotient.Base) ->
+>               (KQ.normalize x = KQ.normalize y) ->
+>               (f x) = (f y)
+>             ) ->
+>             (x, y : SplitQuotient.Base) ->
+>             (x ~ y) ->
+>             (f x = f y)
+>
+> invNToInv f fInvN x y xRy = fInvN x y (normalizeMapsRelatedToEQ x y xRy)
 
 > liftCompR : {B : Type} ->
 >             (f : SplitQuotient.Base -> B) ->
