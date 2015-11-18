@@ -24,7 +24,6 @@ Positive natural numbers
 > positiveUnique : {n : Nat} -> Unique (Positive n)
 > positiveUnique SuccPos SuccPos = Refl
 
-
 > ||| Positive natural numbers are closed under multiplication
 > multPosPosIsPos : (m, n : Nat) -> 
 >                   Positive m -> 
@@ -304,6 +303,14 @@ NatProperties.multMultElimLeft)
 see NatProperties.multMultElimLeft
 
 > multPositiveLeftInjective : (m, n : Nat) -> (d : PosNat) -> (nat d) * m = (nat d) * n -> m = n
+> multPositiveLeftInjective m n (Element d dPos) dmEQdn = 
+>     multMultElimLeft d d m n Refl dNotZ dmEQdn where
+>       positiveIsNotZ : (k : Nat) -> Positive k -> Not (k = Z)
+>       positiveIsNotZ Z SuccPos _ impossible
+>       positiveIsNotZ (S k) _  skEQZ = ZnotS (sym skEQZ)
+>       dNotZ : Not (d = Z)
+>       dNotZ = positiveIsNotZ d dPos
+
 
 > transitiveFR : (x, y, z : Fraction) -> (x ~ y) -> (y ~ z) -> (x ~ z)
 > transitiveFR (n,d) (m,e) (l,f) neIsmd mfIsle = 
@@ -443,4 +450,68 @@ Properties of Fraction operations 2: those that only prove equivalences w.r.t. ~
 >     (x * z + y * z)
 >     QED
    
+prove that fraction plus and mult operations are ~ - invariant
+
+> plusInvariant : (x, x' : Fraction) -> (x ~ x') -> 
+>                 (y, y' : Fraction) -> (y ~ y') ->
+>                 (x + y) ~ (x' + y')
+> plusInvariant (n, Element d _) (n', Element d' _) nd'EQn'd
+>               (m, Element e _) (m', Element e' _) me'EQm'e = pf where
+>   helper : (a, b, c, d : Nat) -> (a * b) * (c * d) = (a * c) * (b * d)
+>   helper a b c d =
+>     ((a * b) * (c * d))  ={ sym (multAssociative a b (c * d))                    }=
+>     (a * (b * (c * d)))  ={ cong {f = \x => a * x} (multAssociative b c d)       }=
+>     (a * ((b * c) * d))  ={ cong {f = \x => a * (x * d)} (multCommutative b c)   }=
+>     (a * ((c * b) * d))  ={ cong {f = \x => a * x} (sym (multAssociative c b d)) }=
+>     (a * (c * (b * d)))  ={ multAssociative a c (b * d)                          }=
+>     ((a * c) * (b * d))  QED
+>   helper2 : (a, b, c, d, a', c' : Nat) -> (a * c = a' * c') ->
+>             ((a * b) * (c * d)) = ((a' * d) * (c' * b))
+>   helper2 a b c d a' c' acEQa'c' =
+>     ((a * b) * (c * d))   ={ helper a b c d }=
+>     ((a * c) * (b * d))   ={ cong {f = \x => x * (b * d)} acEQa'c' }=
+>     ((a' * c') * (b * d)) ={ cong {f = \x => (a' * c') * x} (multCommutative b d) }=
+>     ((a' * c') * (d * b)) ={ helper a' c' d b }=
+>     ((a' * d) * (c' * b)) QED 
+>   pf : ((n * e) + (m * d)) * (d' * e') = ((n' * e') + (m' * d')) * (d * e)
+>   pf = 
+>     (((n * e) + (m * d)) * (d' * e')) 
+>       ={ multDistributesOverPlusLeft (n * e) (m * d) (d' * e') }=
+>     (((n * e) * (d' * e')) + ((m * d) * (d' * e')))
+>       ={ cong {f = \x => x + ((m * d) * (d' * e'))} (helper2 n e d' e' n' d nd'EQn'd) }=
+>     (((n' * e') * (d * e)) + ((m * d) * (d' * e')))
+>       ={ cong {f = \x => ((n' * e') * (d * e)) + ((m * d) * x)} (multCommutative d' e') }=
+>     (((n' * e') * (d * e)) + ((m * d) * (e' * d')))
+>       ={ cong {f = \x => ((n' * e') * (d * e)) + x} (helper2 m d e' d' m' e me'EQm'e) }=
+>     (((n' * e') * (d * e)) + ((m' * d') * (e * d)))
+>       ={ cong {f = \x => ((n' * e') * (d * e)) + ((m' * d') * x)} (multCommutative e d) }=
+>     (((n' * e') * (d * e)) + ((m' * d') * (d * e)))
+>       ={ sym (multDistributesOverPlusLeft (n' * e') (m' * d') (d * e)) }=
+>     (((n' * e') + (m' * d')) * (d * e))
+>       QED
+
+
+> multInvariant : (x, x' : Fraction) -> (x ~ x') -> 
+>                 (y, y' : Fraction) -> (y ~ y') ->
+>                 (x * y) ~ (x' * y')
+> multInvariant (n, Element d _) (n', Element d' _) nd'EQn'd
+>               (m, Element e _) (m', Element e' _) me'EQm'e = pf where
+>   helper : (a, b, c, d : Nat) -> (a * b) * (c * d) = (a * c) * (b * d)
+>   helper a b c d =
+>     ((a * b) * (c * d))  ={ sym (multAssociative a b (c * d))                    }=
+>     (a * (b * (c * d)))  ={ cong {f = \x => a * x} (multAssociative b c d)       }=
+>     (a * ((b * c) * d))  ={ cong {f = \x => a * (x * d)} (multCommutative b c)   }=
+>     (a * ((c * b) * d))  ={ cong {f = \x => a * x} (sym (multAssociative c b d)) }=
+>     (a * (c * (b * d)))  ={ multAssociative a c (b * d)                          }=
+>     ((a * c) * (b * d))  QED
+>   pf : (n * m) * (d' * e') = (n' * m') * (d * e)
+>   pf = 
+>     ((n * m) * (d' * e')) ={ helper n m d' e' }=
+>     ((n * d') * (m * e')) ={ cong {f = \x => x * (m * e')} nd'EQn'd }=
+>     ((n' * d) * (m * e')) ={ cong {f = \x => (n' * d) * x} me'EQm'e }=
+>     ((n' * d) * (m' * e)) ={ helper n' d m' e }=
+>     ((n' * m') * (d * e)) QED
+
+
+
 

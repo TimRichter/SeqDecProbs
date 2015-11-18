@@ -9,6 +9,7 @@
 > import Syntax.PreorderReasoning
 > import SplitQuotient
 > import KernelQuotient
+> import Fraction2
 
 > %default total
 
