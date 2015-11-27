@@ -80,6 +80,7 @@ module parameters
 > reprAfterClassOfIsNormalize x = Refl
 
 
+
 > ||| The classes of elements |x| and |y| such that
 > ||| |normalize x = normalize y| (, i.e. |x| and |y|
 > ||| are in the |ker normalize| relation,) are equal.
@@ -118,7 +119,6 @@ module parameters
 >         ={ reprNormal cl                         }=
 >       (repr cl)
 >         QED
-
 
 > ||| Any function |KBase -> B| can be lifted to a function
 > ||| |KQuot -> B|.
@@ -246,29 +246,16 @@ module parameters
 > liftBinopComp op opInv x y =
 >   lift2Comp {B=KQuot} (classOfAfterOp op) opInv x y
 
-----------------------------
-Type classes
-----------------------------
 
- instance Num KBase => Num KQuot where
-   (+) = liftBinop (+)
-   (*) = liftBinop (*)
-   fromInteger = classOf . fromInteger
-   -- abs = classOf . (lift abs)
 
- instance Show KBase => Show KQuot where
-   show (Class x _) = "[" ++ show x ++ "]"
 
- instance DecEq KBase => DecEq KQuot where
-   decEq (Class x nxIsx) (Class y nyIsy)
-     with (decEq (normalize x) (normalize y))
-     | (Yes p) = Yes (classesEqIfReprEq  (Class x nxIsx)
-                                         (Class y nyIsy)
-                                         xIsy) where
-         xIsy =
-           (x)             ={ sym nxIsx }=
-           (normalize x)   ={ p }=
-           (normalize y)   ={ nyIsy }=
-           (y)             QED
-     | (No contra) = No (contra . (cong {f = normalize . repr}))
+given a (ternary) type family on KQuot, to give a section
+of that type family it is enough to give a value for any
+[x], [y], [z] with x, y, z in KBase
+
+> test : {B : KQuot -> KQuot -> KQuot -> Type} ->
+>        (f : (x : KBase) -> (y : KBase) -> (z : KBase) -> B [x] [y] [z]) ->
+>        (x : KQuot) -> (y : KQuot) -> (z : KQuot) -> B x y z
+> test {B} f x y z = f (repr x) (repr y) (repr z)
+
 
