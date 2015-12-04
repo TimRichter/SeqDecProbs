@@ -40,20 +40,34 @@
 
 > ||| Addition is commutative
 > plusCommutative : (x, y : NonNegRational) -> x + y = y + x
-> plusCommutative x y = 
->   let rx = repr x in
->   let ry = repr y in
->   let plusC = SQ.liftBinopCompR (+) plusInvariant in
->   let fromR = KQ.classOfAfterReprIsId in
+> plusCommutative = KQ.test2 {B = \x => \y => x + y = y + x} f where
+>   f : (x, y : Fraction) -> [x] + [y] = [y] + [x]
+>   f x y =
+>     let plusC = SQ.liftBinopCompR (+) plusInvariant in
 >
->   (x + y)        ={ cong {f = \w => w + y}          (sym (fromR x)) }=
->   ([rx] + y)     ={ cong {f = \w => [rx] + w}       (sym (fromR y)) }=
->   ([rx] + [ry])  ={                                   (plusC rx ry) }=
->   ([rx + ry])    ={ cong {f = \w => [w]} (FP.plusCommutative rx ry) }=
->   ([ry + rx])    ={                               sym (plusC ry rx) }=
->   ([ry] + [rx])  ={ cong {f = \w => w + [rx]}             (fromR y) }=
->   (y + [rx])     ={ cong {f = \w => y + w}                (fromR x) }=
->   (y + x)        QED
+>     ([x] + [y])  ={                                   (plusC x y) }=
+>     ([x + y])    ={ cong {f = \w => [w]} (FP.plusCommutative x y) }=
+>     ([y + x])    ={                               sym (plusC y x) }=
+>     ([y] + [x])  QED
+>     
+
+
+
+
+< plusCommutative x y = 
+<   let rx = repr x in
+<   let ry = repr y in
+<   let plusC = SQ.liftBinopCompR (+) plusInvariant in
+<   let fromR = KQ.classOfAfterReprIsId in
+<
+<   (x + y)        ={ cong {f = \w => w + y}          (sym (fromR x)) }=
+<   ([rx] + y)     ={ cong {f = \w => [rx] + w}       (sym (fromR y)) }=
+<   ([rx] + [ry])  ={                                   (plusC rx ry) }=
+<   ([rx + ry])    ={ cong {f = \w => [w]} (FP.plusCommutative rx ry) }=
+<   ([ry + rx])    ={                               sym (plusC ry rx) }=
+<   ([ry] + [rx])  ={ cong {f = \w => w + [rx]}             (fromR y) }=
+<   (y + [rx])     ={ cong {f = \w => y + w}                (fromR x) }=
+<   (y + x)        QED
 
 > 
 > ||| 0 is right neutral for addition

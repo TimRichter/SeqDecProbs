@@ -1,12 +1,9 @@
-> module KernelQuotient -- originally implemented by Tim Richter (Dec. 2015)
+> module KernelQuotient
 
 > import Syntax.PreorderReasoning
-
 > import EqualityProperties
 
-
 > %default total
-
 
 An idempotent endomap c of a type A can be thought of as
 a choice function for representatives of the kernel of c :
@@ -37,7 +34,7 @@ module parameters
 > ||| that are fixed by |normalize|
 > |||
 > data KQuot : Type where
->   Class : (x : KBase) -> normalize x = x -> KQuot
+>   Class : (x : KBase) -> .(xNormal : normalize x = x) -> KQuot
 
 
 > ||| Any class has a canonical representant
@@ -78,7 +75,6 @@ module parameters
 > reprAfterClassOfIsNormalize :   (x : KBase) ->
 >                                 repr [x] = normalize x
 > reprAfterClassOfIsNormalize x = Refl
-
 
 
 > ||| The classes of elements |x| and |y| such that
@@ -246,16 +242,34 @@ module parameters
 > liftBinopComp op opInv x y =
 >   lift2Comp {B=KQuot} (classOfAfterOp op) opInv x y
 
-
-
-
 given a (ternary) type family on KQuot, to give a section
 of that type family it is enough to give a value for any
 [x], [y], [z] with x, y, z in KBase
 
-> test : {B : KQuot -> KQuot -> KQuot -> Type} ->
+> test3 : {B : KQuot -> KQuot -> KQuot -> Type} ->
 >        (f : (x : KBase) -> (y : KBase) -> (z : KBase) -> B [x] [y] [z]) ->
 >        (x : KQuot) -> (y : KQuot) -> (z : KQuot) -> B x y z
-> test {B} f x y z = f (repr x) (repr y) (repr z)
+> test3 {B} f x y z = replace {P = id} BEq (f (repr x) (repr y) (repr z)) where
+>     BEq : B [repr x] [repr y] [repr z] = B x y z
+>     BEq =
+>       (B [repr x] [repr y] [repr z]) 
+>         ={ cong {f = \w => B w [repr y] [repr z]} (classOfAfterReprIsId x) }=
+>       (B x [repr y] [repr z]) 
+>         ={ cong {f = \w => B x w [repr z]}        (classOfAfterReprIsId y) }=
+>       (B x y [repr z]) 
+>         ={ cong {f = \w => B x y w}               (classOfAfterReprIsId z) }=
+>       (B x y z)
+>        QED
 
-
+> test2 : {B : KQuot -> KQuot -> Type} ->
+>        (f : (x : KBase) -> (y : KBase) -> B [x] [y]) ->
+>        (x : KQuot) -> (y : KQuot) -> B x y
+> test2 {B} f x y = replace {P = id} BEq (f (repr x) (repr y)) where
+>     BEq : B [repr x] [repr y] = B x y
+>     BEq =
+>       (B [repr x] [repr y]) 
+>         ={ cong {f = \w => B w [repr y]} (classOfAfterReprIsId x) }=
+>       (B x [repr y]) 
+>         ={ cong {f = \w => B x w}        (classOfAfterReprIsId y) }=
+>       (B x y ) 
+>         QED
