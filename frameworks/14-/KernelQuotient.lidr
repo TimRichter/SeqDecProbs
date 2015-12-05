@@ -2,6 +2,7 @@
 
 > import Syntax.PreorderReasoning
 > import EqualityProperties
+> import NFun
 
 > %default total
 
@@ -273,3 +274,27 @@ of that type family it is enough to give a value for any
 >         ={ cong {f = \w => B x w}        (classOfAfterReprIsId y) }=
 >       (B x y ) 
 >         QED
+
+
+generalize lift to n-ary functions:
+
+> liftN : {n : Nat} -> {B : Type} ->
+>         (NFun n KBase B) -> (NFun n KQuot B)
+> liftN = nFunFmapA repr
+
+lifting n-ary operations
+
+> liftNOp : {n : Nat} -> (NOp n KBase) -> (NOp n KQuot)
+> liftNOp = liftN . (nFunFmapB classOf) 
+
+generalize computation rule for NFun:
+
+> kernel : {A, B : Type} -> (f : A -> B) -> BinRel A
+> kernel f x y = f x = f y
+
+> liftNFunComp : {n : Nat} -> {B : Type} -> 
+>                (f : NFun n KBase B) ->
+>                (fInv : isInvariantNFun (kernel normalize) (=) f) ->
+>                NDFun n KBase (NFun                
+
+
