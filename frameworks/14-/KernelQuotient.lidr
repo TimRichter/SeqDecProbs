@@ -292,9 +292,40 @@ generalize computation rule for NFun:
 > kernel : {A, B : Type} -> (f : A -> B) -> BinRel A
 > kernel f x y = f x = f y
 
-> liftNFunComp : {n : Nat} -> {B : Type} -> 
->                (f : NFun n KBase B) ->
->                (fInv : isInvariantNFun (kernel normalize) (=) f) ->
->                NDFun n KBase (NFun                
+
+If we have an n-ary type family |B : NFun n KBase Type|
+(e.g. \x => \y => \z => x + y + z = x + (y + z))
+
+and a section into it ( f : NDFun n A B )
+(e.g. plusAssociative : (x, y, z : KBase) -> x + y + z = x + (y + z))
+
+we can lift f to a section of the lifted family
+ liftN B : NFun n KQuot Type
+
+> liftD : {n : Nat} ->
+>         {B : NFun n KBase Type} ->
+>         (f : NDFun n KBase B) ->
+>         NDFun n KQuot (liftN B)
+> liftD {n=Z}      {B} b = b
+> liftD {n=(S n')} {B} f = \x => liftD {n=n'} {B=B (repr x)} (f (repr x)) 
+
+we don't need invariance of the type family (it can be
+lifted anyway).
+
+but now we have to show things like
+liftN (\x => \y => \z => x + y + z = x + (y + z))
+
+is (homotopic to)
+\x => \y => \z => x + y + z = x + (y + z)
+
+on KQuot
+
+
+"computation rule"
+
+ liftNFunComp : {n : Nat} -> {B : Type} -> 
+                (f : NFun n KBase B) ->
+                (fInv : isInvariantNFun (kernel normalize) (=) f) ->
+                NDFun n KBase (NFun                
 
 

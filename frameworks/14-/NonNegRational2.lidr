@@ -7,6 +7,7 @@
 > import FractionProperties as FP
 > import SplitQuotient as SQ
 > import KernelQuotient as KQ
+> import NFun
 > import Syntax.PreorderReasoning
 > import NumRefinements
 
@@ -23,8 +24,8 @@
 > NonNegRational = KQ.KQuot
 
 > instance Num NonNegRational where
->   (+) = KQ.liftBinop (+)
->   (*) = KQ.liftBinop (*)
+>   (+) = KQ.liftNOp {n=2} (+)
+>   (*) = KQ.liftNOp {n=2} (*)
 >   fromInteger = KQ.classOf . fromInteger
 
 > plusInvariant : (x, x' : SQ.Base) -> (x `SQ.Relation` x') -> 
@@ -36,6 +37,12 @@
 >                 (y, y' : SQ.Base) -> (y `SQ.Relation` y') -> 
 >                 (x * y) `SQ.Relation` (x' * y')
 > multInvariant x x' xRx' y y' yRy' = multPreservesEq x x' y y' xRx' yRy'
+
+ ||| test ... doesn't work yet
+ plusCommutative1 : (x, y : NonNegRational) -> x + y = y + x
+ plusCommutative1 x y = stdLift x y where
+   stdLift : (x, y : NonNegRational) -> (KQ.liftN {n=2} {B=Type} (\x => \y => x + y = y + x)) x y
+   stdLift = KQ.liftD {n=2} {B = \x => \y => x + y = y + x} (FP.plusCommutative)
 
 
 > ||| Addition is commutative
