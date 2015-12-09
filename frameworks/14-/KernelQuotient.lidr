@@ -10,7 +10,7 @@ An idempotent endomap c of a type A can be thought of as
 a choice function for representatives of the kernel of c :
 
   ker c : A -> A -> Type
-  ker c x y = c x = c y
+  ker c x y = (c x = c y)
 
 which is an (in Idris even propositional a.k.a. unique)
 equivalence relation on A.
@@ -25,7 +25,7 @@ identified with the quotient of A by that equivalence.
 module parameters
 
 > KBase : Type
-> normalize : KernelQuotient.KBase -> 
+> normalize : KernelQuotient.KBase ->
 >             KernelQuotient.KBase
 > normalizeIdem : Idempotent KernelQuotient.normalize
 
@@ -54,8 +54,8 @@ module parameters
 > ||| Since Idris has UIP, two elements |cl1, cl2 : KQuot|
 > ||| are equal if their representants are equal.
 > |||
-> classesEqIfReprEq : (cl1, cl2 : KQuot) ->
->                     repr cl1 = repr cl2 ->
+> classesEqIfReprEq : (cl1, cl2 : KQuot)    ->
+>                     repr cl1 = repr cl2   ->
 >                     cl1 = cl2
 > classesEqIfReprEq (Class q nqIsq) (Class q nqIsq') Refl =
 >   cong (uniqueEq (normalize q) q nqIsq nqIsq')
@@ -79,8 +79,9 @@ module parameters
 
 
 > ||| The classes of elements |x| and |y| such that
-> ||| |normalize x = normalize y| (, i.e. |x| and |y|
-> ||| are in the |ker normalize| relation,) are equal.
+> ||| |normalize x = normalize y| (i.e. such that |x|
+> ||| and |y| are in the |ker normalize| relation) are
+> ||| equal.
 > |||
 > classOfEqIfNormalizeEq :  (x, y : KBase) ->
 >                           (normalize x = normalize y) ->
@@ -90,29 +91,29 @@ module parameters
 >   classesEqIfReprEq [x] [y] rCxIsrCy where
 >     rCxIsrCy : repr [x] = repr [y]
 >     rCxIsrCy =
->       (repr [x])  
+>       (repr [x])
 >         ={ reprAfterClassOfIsNormalize x       }=
 >       (normalize x)
 >         ={ nxIsny                              }=
->       (normalize y)  
+>       (normalize y)
 >         ={ sym (reprAfterClassOfIsNormalize y) }=
->       (repr [y])     
+>       (repr [y])
 >         QED
 
 
-> ||| The class of the canonical representant of any 
+> ||| The class of the canonical representant of any
 > ||| given class is that class itself.
 > |||
 > classOfAfterReprIsId :  (cl : KQuot) ->
 >                         [repr cl] = cl
 >
 > classOfAfterReprIsId cl =
->   classesEqIfReprEq [repr cl] cl sameRepr where
+>   classesEqIfReprEq [repr cl] cl sameRepr  where
 >     sameRepr : repr [repr cl] = repr cl
 >     sameRepr =
->       (repr [repr cl])      
+>       (repr [repr cl])
 >         ={ reprAfterClassOfIsNormalize (repr cl) }=
->       (normalize (repr cl)) 
+>       (normalize (repr cl))
 >         ={ reprNormal cl                         }=
 >       (repr cl)
 >         QED
@@ -122,14 +123,14 @@ module parameters
 > |||
 > lift :  {B : Type} ->
 >         (f : KBase -> B) ->
->         KQuot -> B
+>              KQuot -> B
 >
 > lift f (Class x _) = f x
 
 
-> ||| If |f: KBase -> B| is invariant under the |ker normalize|
+> ||| If |f : KBase -> B| is invariant under the |ker normalize|
 > ||| relation, |lift f| is a lift of |f| along the canonical map
-> ||| |classOf: KBase -> KQuot|, i.e. |(lift f) . classOf|
+> ||| |classOf : KBase -> KQuot|, i.e. |(lift f) . classOf|
 > ||| is (pointwise) equal to |f|, i.e. this diagram commutes:
 > |||
 > |||              lift f
@@ -142,7 +143,7 @@ module parameters
 > ||| 
 > ||| This can be seen as a "computation rule" for |lift f|:
 > ||| |(lift f) [x] = f x|.
-> ||| 
+> |||
 > liftComp: {B : Type} ->
 >           (f : KBase -> B) ->
 >           ( (x, y : KBase) ->
@@ -160,7 +161,7 @@ module parameters
 > |||
 > lift2 : {B : Type} ->
 >         (f : KBase -> KBase -> B) ->
->         KQuot -> KQuot -> B
+>              KQuot -> KQuot -> B
 >
 > lift2 f (Class x _) (Class y _) = f x y
 
@@ -210,7 +211,7 @@ module parameters
 > ||| lifts to a binary operation on KQuot.
 > |||
 > liftBinop : (op : KBase -> KBase -> KBase) ->
->             (KQuot -> KQuot -> KQuot)
+>                   KQuot -> KQuot -> KQuot
 >
 > liftBinop op x y = lift2 (classOfAfterOp op) x y
 
@@ -248,59 +249,47 @@ of that type family it is enough to give a value for any
 [x], [y], [z] with x, y, z in KBase
 
 > test3 : {B : KQuot -> KQuot -> KQuot -> Type} ->
->        (f : (x : KBase) -> (y : KBase) -> (z : KBase) -> B [x] [y] [z]) ->
->        (x : KQuot) -> (y : KQuot) -> (z : KQuot) -> B x y z
+>         (f : (x : KBase) -> (y : KBase) -> (z : KBase) -> B [x] [y] [z]) ->
+>         (x : KQuot) -> (y : KQuot) -> (z : KQuot) -> B x y z
 > test3 {B} f x y z = replace {P = id} BEq (f (repr x) (repr y) (repr z)) where
 >     BEq : B [repr x] [repr y] [repr z] = B x y z
 >     BEq =
->       (B [repr x] [repr y] [repr z]) 
+>       (B [repr x] [repr y] [repr z])
 >         ={ cong {f = \w => B w [repr y] [repr z]} (classOfAfterReprIsId x) }=
->       (B x [repr y] [repr z]) 
+>       (B x [repr y] [repr z])
 >         ={ cong {f = \w => B x w [repr z]}        (classOfAfterReprIsId y) }=
->       (B x y [repr z]) 
+>       (B x y [repr z])
 >         ={ cong {f = \w => B x y w}               (classOfAfterReprIsId z) }=
 >       (B x y z)
->        QED
+>         QED
 
 > test2 : {B : KQuot -> KQuot -> Type} ->
->        (f : (x : KBase) -> (y : KBase) -> B [x] [y]) ->
->        (x : KQuot) -> (y : KQuot) -> B x y
+>         (f : (x : KBase) -> (y : KBase) -> B [x] [y]) ->
+>         (x : KQuot) -> (y : KQuot) -> B x y
 > test2 {B} f x y = replace {P = id} BEq (f (repr x) (repr y)) where
 >     BEq : B [repr x] [repr y] = B x y
 >     BEq =
->       (B [repr x] [repr y]) 
+>       (B [repr x] [repr y])
 >         ={ cong {f = \w => B w [repr y]} (classOfAfterReprIsId x) }=
->       (B x [repr y]) 
+>       (B x [repr y])
 >         ={ cong {f = \w => B x w}        (classOfAfterReprIsId y) }=
->       (B x y ) 
+>       (B x y )
 >         QED
 
 
-generalize lift to n-ary functions:
+lifting n-ary functions:
 
 > liftN : {n : Nat} -> {B : Type} ->
 >         (NFun n KBase B) -> (NFun n KQuot B)
 > liftN = nFunFmapA repr
 
-lifting n-ary operations
+lifting n-ary operations:
 
 > liftNOp : {n : Nat} -> (NOp n KBase) -> (NOp n KQuot)
-> liftNOp = liftN . (nFunFmapB classOf) 
+> liftNOp = liftN . (nFunFmapB classOf)
 
-generalize computation rule for NFun:
-
-> kernel : {A, B : Type} -> (f : A -> B) -> BinRel A
-> kernel f x y = f x = f y
-
-
-If we have an n-ary type family |B : NFun n KBase Type|
-(e.g. \x => \y => \z => x + y + z = x + (y + z))
-
-and a section into it ( f : NDFun n A B )
-(e.g. plusAssociative : (x, y, z : KBase) -> x + y + z = x + (y + z))
-
-we can lift f to a section of the lifted family
- liftN B : NFun n KQuot Type
+lifting dependent n-ary functions:
+note that lift is a section of the lifted type family
 
 > liftD : {n : Nat} ->
 >         {B : NFun n KBase Type} ->
@@ -309,10 +298,15 @@ we can lift f to a section of the lifted family
 > liftD {n=Z}      {B} b = b
 > liftD {n=(S n')} {B} f = \x => liftD {n=n'} {B=B (repr x)} (f (repr x)) 
 
-we don't need invariance of the type family (it can be
-lifted anyway).
+For the lifting itself we don't need invariance of the type family!
 
-but now we have to show things like
+towards generalizing the computation rule for NFun:
+
+> kernel : {A, B : Type} -> (f : A -> B) -> BinRel A
+> kernel f x y = f x = f y
+
+
+But now we have to show things like
 liftN (\x => \y => \z => x + y + z = x + (y + z))
 
 is (homotopic to)
@@ -330,9 +324,21 @@ liftNOp (+) = (liftN (nFunFmapB classOf (+)))
             = compose (spread 2 repr) (compose [(+)] classOf)
 
      ( so 
-        liftNOp (+) x y =   classOf (repr x) (repr y)    )
+        liftNOp (+) x y =   classOf ((repr x) + (repr y))    )
 
+so what we need to prove that the lift can be transported to
+the "right" family, is
 
+(x, y, z : KQuot) -> ((repr x + repr y) + repr z = repr x + (repr y + repr z)) = 
+                     (classOf (repr (classOf (repr x + repr y)) + repr z) = 
+                      classOf (repr x + repr (classOf (repr y + repr z))))
+
+-- ingredients:
+
+(T, T' : NOp n KBase ) -> relTT' : liftBinRelNFun (kernel normalize) (kernel normalize) T T' ->
+   liftBinRelNFun (=) (=) (liftNOp T) (liftNOp T')
+
+...
 
 
 
