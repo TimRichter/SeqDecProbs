@@ -16,7 +16,6 @@ special case: n-ary operations
 > NOp : Nat -> Type -> Type
 > NOp n A = NFun n A A
 
-
 addArgsLeft: from an n-ary function form an (n + m)-ary
 one that ignores it's first m arguments
 
@@ -56,7 +55,6 @@ one that ignores its last m arguments
 > insertArgsAt {n=(S n')} m (S i) {smaller=(LTESucc iLten')} f = 
 >                \x => insertArgsAt {n=n'} m i {smaller=iLten'} (f x)
 
-
 projections
 
 > pr : {A : Type} -> {n : Nat} -> 
@@ -66,20 +64,23 @@ projections
 > pr {n=S _}  Z                               = \x => constN x
 > pr {n=S n'} (S i') {smaller=LTESucc i'LTn'} = \x => pr {n=n'} i' {smaller= i'LTn'}
 
+of an m-ary function f, make a vector of length n 
+of (m * n)-ary functions where the i'th entry is just 
+f applied to the arguments x_i*m, x_i*m+1 ,... x_i*m+m-1
 
- spread : {m : Nat} -> {A, B : Type} ->
-          (n : Nat) ->
-          NFun m A B ->
-          Vect n (NFun (m * n) A B)
- spread Z                        f = []
- spread {m=Z}      {A} {B} (S n) b = b :: (spread {m=Z}  {A} {B} n b)
-
- spread {m=(S m')} {A} {B} (S n) f = compose [f](pr Z) :: (spread {m=m'} {A} {B} n b)
-
-test
-
-> plus : NOp 2 Nat
-> plus x y = x + y
+> spread : {m : Nat} -> {A, B : Type} ->
+>          (n : Nat) ->
+>          NFun m A B ->
+>          Vect n (NFun (m * n) A B)
+> spread                     Z    f = []
+> spread {m} {A} {B} (S n) f = 
+>         (replace {P = \k => NFun k A B} (pf1 m n) (addArgsRight {n=m} (m * n) f)) :: 
+>         (map (replace {P= \k => NFun (m * n) A B -> NFun k A B} (pf2 m n) (addArgsLeft m)) 
+>             (spread {m} {A} {B} n f)) where
+>     pf1 : (r, s : Nat) -> r + (r * s) = r * S s
+>     pf1 r s = sym (multRightSuccPlus r s)
+>     pf2 : (r, s : Nat) -> (r * s) + r = r * S s
+>     pf2 r s= trans (plusCommutative (r * s) r) (pf1 r s)
 
 binary relations
 
@@ -101,10 +102,6 @@ functions (a.k.a. homotopy)
 > homotopic : {n : Nat} -> {A, B : Type} -> BinRel (NFun n A B)
 > homotopic = liftBinRelNFun (=) (=)
 
-we can now prove the functor properties of NFun n as follows:
-
-> nFunFmapAId : {n : Nat} -> {A, B: Type} -> nFunFmapA 
-
 An n-ary function is "invariant" w.r.t. binary relations on its 
 source and target types if it is related to itself w.r.t. the lifted 
 relation
@@ -114,8 +111,8 @@ relation
 >                   (f : NFun n A B) -> Type
 > isInvariantNFun relA relB f = liftBinRelNFun relA relB f f
 
-dependent n-ary functions on a type: the target is now a family
-over (copies of) A, i.e. of type |NFun n A Type|
+dependent n-ary functions on a type: the target is now an
+n-ary type family on A, i.e. of type |NFun n A Type|
 
 > NDFun : (n : Nat) -> (A : Type) -> (B : NFun n A Type) -> Type
 > NDFun Z     A B = B
@@ -132,7 +129,7 @@ composition
 > compose {n=(S _)} {m=Z}     {A} {B} (b::bs) g = compose {m=Z} {A} {B} bs (g b)
 > compose {n=(S _)} {m=(S _)}         fs      g = \x => compose (map (\h => h x) fs) g
 
-variant avoiding Vect, how to do...?
+variant avoiding Vect, feels like impossible, but why?
 
 < compose' : {n, m : Nat} -> {A, B, C : Type} ->
 <            NFun n (NFun m A B) ((NFun n B C) -> (NFun m A C))
@@ -145,11 +142,18 @@ NFun n is a contravariant functor in A:
 >             (f : A -> A') ->
 >             (NFun n A' B) -> 
 >             (NFun n A B)
-> nFunFmapA {n=Z}      f b = b
-> nFunFmapA {n=(S n')} f g = \x => (nFunFmapA f (g (f x)))
 
+could prove it "by hand"
 
-and a covariant functor in B
+< nFunFmapA {n=Z}      f b = b
+< nFunFmapA {n=(S n')} f g = \x => (nFunFmapA f (g (f x)))
+
+but maybe better via compose
+
+> nFunFmapA {A} {B} {n} f g = 
+>     replace {P = \k => NFun k A B} (multOneLeftNeutral n) (compose (spread {m=1} n f) g)
+
+NFun is a covariant functor in B
 
 > nFunFmapB : {n : Nat} -> {A, B, B' : Type} -> 
 >             (f : B -> B') ->
@@ -186,9 +190,15 @@ i.e. a dependent n-ary function on A into the type family
 
 what else do we need?
 
+- define identity NFun id (= pr 1 0)
 
+- properties of compose:
 
-
+  + compose [id,...,id] f = f
+  + compose [f] id = f
+  + compose [f_0,...,f_n-1] (pr n i) = f_i
+  + associativity:
+    
 
 
 

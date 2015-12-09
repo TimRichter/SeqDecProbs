@@ -316,9 +316,24 @@ but now we have to show things like
 liftN (\x => \y => \z => x + y + z = x + (y + z))
 
 is (homotopic to)
-\x => \y => \z => x + y + z = x + (y + z)
+\x => \y => \z => (x `liftNOp (+)` y) `liftNOp (+)` z = x `liftNOp (+)` (y `liftNOp (+)` z)
 
-on KQuot
+we have 
+liftNOp  = liftN . (nFunFmapB classOf)
+liftN    = nFunFmap repr
+
+so e.g.
+
+liftNOp (+) = (liftN (nFunFmapB classOf (+)))
+            = (liftN (compose [(+)] classOf))
+            = ((nFunFmapA repr) (compose [(+)] classOf))
+            = compose (spread 2 repr) (compose [(+)] classOf)
+
+     ( so 
+        liftNOp (+) x y =   classOf (repr x) (repr y)    )
+
+
+
 
 
 "computation rule"
