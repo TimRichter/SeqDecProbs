@@ -22,18 +22,20 @@ special case: n-ary operations
 composition
 -----------------------------------------------------------
 
+first version: plug n m-ary functions into an n-ary function
+               to get an m-ary one, e.g.
+               compose (+) [(+),(*)] x y = (x + y) + (x * y)
+
 > compose : {n, m : Nat} -> {A, B, C : Type} ->
->           (Vect n (NFun m A B)) ->
 >           (NFun n B C) ->
+>           (Vect n (NFun m A B)) ->
 >           (NFun m A C)
-> compose {n=Z}     {m=Z}             Nil     c = c
-> compose {n=Z}     {m=(S _)}     {B} Nil     c = \x => compose {B} Nil c
-> compose {n=(S _)} {m=Z}     {A} {B} (b::bs) g = compose {m=Z} {A} {B} bs (g b)
-> compose {n=(S _)} {m=(S _)}         fs      g = \x => compose (map (\h => h x) fs) g
+> compose {n=Z}     {m=Z}             c Nil     = c
+> compose {n=Z}     {m=(S _)}     {B} c Nil     = \x => compose {B} c Nil
+> compose {n=(S _)} {m=Z}     {A} {B} g (b::bs) = compose {m=Z} {A} {B} (g b) bs
+> compose {n=(S _)} {m=(S _)}         g fs      = \x => compose g (map (\h => h x) fs)
 
-variant avoiding Vect, feels like impossible, but why?
-
-we need
+variant avoiding Vect (useful..?)
 
 > pullN : {n : Nat} -> {A, B, C : Type} ->
 >         NFun n A (B -> C) -> B -> NFun n A C
@@ -49,9 +51,18 @@ we need
 >            NFun n (NFun m A B) ((NFun n B C) -> (NFun m A C))
 > compose' {n=Z}      {m=Z}      {A} {B} {C} = \c => c
 > compose' {n=Z}      {m=(S m')} {A} {B} {C} = \c => \x => ((compose' {n=Z}  {m=m'} {A} {B} {C}) c)
-> compose' {n=(S n')} {m=Z}      {A} {B} {C} = 
->     pushN {n=(S n')} {A=NFun Z A B} {B=NFun (S n') B C} {C=NFun Z A C} 
->       (\g => \b => (pullN {n=n'} {A=NFun Z A B} {B=NFun n' B C} {C=NFun Z A C} (compose' {n=n'} {m=Z}  {A} {B} {C})) (g b))
+
+ compose' {n=(S n')} {m=Z}      {A} {B} {C} = 
+     pushN {n=(S n')} {A=NFun Z A B} {B=NFun (S n') B C} {C=NFun Z A C} 
+       (\g => \b => (pullN {n=n'} {A=NFun Z A B} {B=NFun n' B C} {C=NFun Z A C} (compose' {n=n'} {m=Z}  {A} {B} {C})) (g b))
+
+> compose' {n=(S n')} {m}      {A} {B} {C} = 
+>     pushN {n=(S n')} {A=NFun m A B} {B=NFun (S n') B C} {C=NFun m A C} 
+>       (\g => \b => (pullN {n=n'} {A=NFun m A B} {B=NFun n' B C} {C=NFun m A C} (compose' {n=n'} {m}  {A} {B} {C})) (g b))
+
+
+
+
 
 -----------------------------------------------------------
 dummy arguments etc. probably partly superfluous
@@ -174,7 +185,7 @@ could prove it "by hand"
 but maybe better via compose
 
 > nFunFmapA {A} {B} {n} f g =
->     replace {P = \k => NFun k A B} (multOneLeftNeutral n) (compose (spread {m=1} n f) g)
+>     replace {P = \k => NFun k A B} (multOneLeftNeutral n) (compose g (spread {m=1} n f))
 
 NFun is a covariant functor in B
 
@@ -182,7 +193,7 @@ NFun is a covariant functor in B
 >             (f : B -> B') ->
 >             (NFun n A B) ->
 >             (NFun n A B')
-> nFunFmapB f g = compose [g] f
+> nFunFmapB f g = compose f [g]
 
 
 given a relation |relB| on B, and n-ary functions
@@ -201,13 +212,13 @@ which is of type
   (x1 : A) -> .... -> (xn : A) -> relB (f x1 ... xn) (g x1 ... xn)
 
 i.e. a dependent n-ary function on A into the type family
-   (compose [f, g] relB) : NFun n A Type
+   (compose relB [f, g]) : NFun n A Type
 
 > test2 : {n : Nat} -> {A, B : Type} ->
 >         (relB : BinRel B) ->
 >         (f, g : NFun n A B) ->
 >         (fRg  : liftBinRelNFun (=) relB f g) ->
->         NDFun n A (compose [f, g] relB)
+>         NDFun n A (compose relB [f, g])
 > test2 {n=Z}     relB f g fRg = fRg
 > test2 {n=(S _)} relB f g fRg = \x => test2 relB (f x) (g x) (fRg x x Refl)
 
@@ -217,10 +228,10 @@ what else do we need?
 
 - properties of compose:
 
-  + compose [id,...,id] f = f
-  + compose [f] id = f
-  + compose [f_0,...,f_n-1] (pr n i) = f_i
+  + compose f [(pr n 0),...,(pr n (n-1))] = f
+  + compose (pr n i) [f_0,...,f_n-1] = f_i
   + associativity:
+    
 
 
 
