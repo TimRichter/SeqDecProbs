@@ -22,9 +22,9 @@ special case: n-ary operations
 composition
 -----------------------------------------------------------
 
-first version: plug n m-ary functions into an n-ary function
-               to get an m-ary one, e.g.
-               compose (+) [(+),(*)] x y = (x + y) + (x * y)
+à la PROPS: plug n m-ary functions into an n-ary function
+            to get an m-ary one, e.g.
+            compose (+) [(+),(*)] x y = (x + y) + (x * y)
 
 > compose : {n, m : Nat} -> {A, B, C : Type} ->
 >           (NFun n B C) ->
@@ -37,31 +37,57 @@ first version: plug n m-ary functions into an n-ary function
 
 variant avoiding Vect (useful..?)
 
-> pullN : {n : Nat} -> {A, B, C : Type} ->
->         NFun n A (B -> C) -> B -> NFun n A C
-> pullN {n=Z}      f = f
-> pullN {n=(S n')} f = flip (\a => pullN {n=n'} (f a))
+< pullN : {n : Nat} -> {A, B, C : Type} ->
+<         NFun n A (B -> C) -> B -> NFun n A C
+< pullN {n=Z}      f = f
+< pullN {n=(S n')} f = flip (\a => pullN {n=n'} (f a))
+<
+< pushN : {n : Nat} -> {A, B, C : Type} ->
+<         (B -> NFun n A C) -> NFun n A (B -> C)
+< pushN {n=Z}      f = f
+< pushN {n=(S n')} f = \a => pushN {n=n'} ((flip f) a)
+<
+< compose' : {n, m : Nat} -> {A, B, C : Type} ->
+<            NFun n (NFun m A B) ((NFun n B C) -> (NFun m A C))
+< compose' {n=Z}      {m=Z}      {A} {B} {C} = \c => c
+< compose' {n=Z}      {m=(S m')} {A} {B} {C} = \c => \x => ((compose' {n=Z}  {m=m'} {A} {B} {C}) c)
+<
+<compose' {n=(S n')} {m=Z}      {A} {B} {C} = 
+<    pushN {n=(S n')} {A=NFun Z A B} {B=NFun (S n') B C} {C=NFun Z A C} 
+<      (\g => \b => (pullN {n=n'} {A=NFun Z A B} {B=NFun n' B C} {C=NFun Z A C} (compose' {n=n'} {m=Z}  {A} {B} {C})) (g b))
+<
+< compose' {n=(S n')} {m}      {A} {B} {C} = 
+<     pushN {n=(S n')} {A=NFun m A B} {B=NFun (S n') B C} {C=NFun m A C} 
+<       (\g => \b => (pullN {n=n'} {A=NFun m A B} {B=NFun n' B C} {C=NFun m A C} (compose' {n=n'} {m}  {A} {B} {C})) (g b))
 
-> pushN : {n : Nat} -> {A, B, C : Type} ->
->         (B -> NFun n A C) -> NFun n A (B -> C)
-> pushN {n=Z}      f = f
-> pushN {n=(S n')} f = \a => pushN {n=n'} ((flip f) a)
+-----------------------------------------------------------
 
-> compose' : {n, m : Nat} -> {A, B, C : Type} ->
->            NFun n (NFun m A B) ((NFun n B C) -> (NFun m A C))
-> compose' {n=Z}      {m=Z}      {A} {B} {C} = \c => c
-> compose' {n=Z}      {m=(S m')} {A} {B} {C} = \c => \x => ((compose' {n=Z}  {m=m'} {A} {B} {C}) c)
+à la operads: plug an n-ary operation to the i-th input of
+              an m-ary function (where 0<= i < m), resulting 
+              in an (m+n-1)-ary function
 
- compose' {n=(S n')} {m=Z}      {A} {B} {C} = 
-     pushN {n=(S n')} {A=NFun Z A B} {B=NFun (S n') B C} {C=NFun Z A C} 
-       (\g => \b => (pullN {n=n'} {A=NFun Z A B} {B=NFun n' B C} {C=NFun Z A C} (compose' {n=n'} {m=Z}  {A} {B} {C})) (g b))
-
-> compose' {n=(S n')} {m}      {A} {B} {C} = 
->     pushN {n=(S n')} {A=NFun m A B} {B=NFun (S n') B C} {C=NFun m A C} 
->       (\g => \b => (pullN {n=n'} {A=NFun m A B} {B=NFun n' B C} {C=NFun m A C} (compose' {n=n'} {m}  {A} {B} {C})) (g b))
-
-
-
+> composeOp : {n, m : Nat} -> {A, B : Type} ->
+>             (i : Nat) ->
+>             {auto smaller: i `LT` m} ->
+>             (NFun m A B) -> 
+>             (NOp n A) -> 
+>             (NFun (n+ (m `minus` 1)) A B) 
+> composeOp {n=Z} {m=(S m')} {A} {B} Z  f a = replace {P = \k => NFun k A B} (minusZId m') (f a) where
+>   minusZId : (k : Nat) -> k = minus k Z 
+>   minusZId Z     = Refl
+>   minusZId (S n) = Refl
+> composeOp {n=(S n')} {m=(S m')}  Z  f g = \x => composeOp {n=n'} {m=(S m')} Z f (g x)
+> composeOp {n} {m=(S m')} {A} {B} (S i') {smaller=(LTESucc i'LTm')} f g = 
+>   replace {P = \k => NFun k A B} pf (\x => composeOp {n} {m=m'} i' {smaller=i'LTm'} (f x) g) where
+>     pf : S (n + minus m' 1) = n + minus m' 0
+>     pf with (m')
+>       | Z   = absurd $ succNotLTEzero i'LTm'
+>       | S l =
+>         (S (n + minus (S l) (S Z))) ={ Refl }=
+>         (S (n + minus l Z))         ={ cong {f = \k => S ( n + k)} (minusZeroRight l) }=
+>         (S (n + l ))                ={ plusSuccRightSucc n l}=
+>         (n + S l)                   ={ cong {f = \k => n + k} (sym (minusZeroRight (S l))) }=
+>         (n + minus (S l) 0)         QED
 
 
 -----------------------------------------------------------
